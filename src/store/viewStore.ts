@@ -9,6 +9,7 @@ interface ViewState {
   toggleViewMode: () => void;
   toggleSidebar: () => void;
   toggleInspector: () => void;
+  setViewMode: (mode: 'canvas' | 'focus') => void;
 }
 
 export const useViewStore = create<ViewState>((set) => ({
@@ -18,6 +19,8 @@ export const useViewStore = create<ViewState>((set) => ({
 
   toggleViewMode: () =>
     set((s) => ({ viewMode: s.viewMode === "canvas" ? "focus" : "canvas" })),
+  
+  setViewMode: (mode) => set({ viewMode: mode }),
 
   toggleSidebar: () =>
     set((s) => ({ sidebarCollapsed: !s.sidebarCollapsed })),

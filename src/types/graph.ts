@@ -29,6 +29,8 @@ export interface NodeDoc {
   updatedAt: Timestamp;
   archived: boolean;
   clusterId: string | null;
+  accessCount: number;              // default 0; incremented on drill start
+  lastAccessedAt: Timestamp | null; // default null; set on drill start
 }
 
 export interface EdgeDoc {

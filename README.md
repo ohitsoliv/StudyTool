@@ -2,7 +2,7 @@
 
 # Nexus Study Engine
 
-**Last updated: 2026-05-07 (Hotfixes 5.x)**
+**Last updated: 2026-05-07 (Packet 6)**
 
 ---
 
@@ -24,8 +24,9 @@ Nexus Study Engine is a spatial knowledge graph for solo deep-learning. The user
 | Packet 5.1 | Inspector cleanup: mastery progress bar (horizontal, colored via `masteryToColor`), "+ Add Layer" button at bottom of layers list, draft-state pattern verified correct (blur-to-commit, discard on node switch). |
 | Packet 5.2 | Add Layer button: scroll-contained layer list with button pinned below; dashed-accent button style. Mastery bar: `min-width: 2px` on fill so 0% still shows a sliver; track background improved. Replaced `window.prompt()` in Sidebar `handleNewGraph` with inline autofocused input (Enter to commit, Escape to cancel). Confirmed `seedGraph.ts` mastery scores were already varied (0.20–0.90); prior 0% display was stale IDB data from before a reset. |
 | Hotfixes 5.x | Self-loop guard added to `onConnect` (`conn.source === conn.target` early return — was missing entirely). Escape-to-close on `CanvasContextMenu` hardened to capture-phase listeners on both `window` and `document` for reliable dismissal. Edge context menu separator verified present in both data and renderer (no change needed). |
+| Packet 6 | **Memorizer Lens — Cloze Collapse.** New `drillStore` (Zustand), `src/types/drill.ts`, and deterministic `clozeSelection` util (seeded LCG from text hash, 1–8 blanks, content-word bias). `FocusWorkspace` becomes full drill stage with `idle`/`active`/`graded` phases. "Study this node" button in Inspector node mode (eligible iff a text layer ≥ 30 chars). `NodeDoc` gained `accessCount: number` and `lastAccessedAt: Timestamp \| null`. `viewStore.setViewMode` added for programmatic mode switching. Mastery formula on submit: +0.10 perfect / +0.05 ≥ 80% / 0 in 50–80% / −0.10 below 50%, clamped [0, 1]. |
 
-**Next: Packet 6 — BYO-AI Ingestion** (JSON schema, master prompts, Syllabus + Material modes, Orphan Inbox, dagre auto-layout).
+**Next: Packet 6.5 — Memorizer Lens: Path Finder** (non-adjacent connected node pair; click intermediate nodes in correct sequence; reuses `drillStore` architecture).
 
 ---
 
@@ -152,6 +153,8 @@ export interface NodeDoc {
   updatedAt: Timestamp;
   archived: boolean;      // Project Packaging not yet built; field exists to support it
   clusterId: string | null; // Cluster collapse not yet built; null everywhere today
+  accessCount: number;      // incremented on drill start; default 0
+  lastAccessedAt: Timestamp | null; // set on drill start; default null
 }
 
 export interface EdgeDoc {
@@ -328,10 +331,20 @@ The user codes well but uses AI for bulk generation, then reviews and tweaks the
 
 ## 11. Roadmap
 
-### Packet 6 — BYO-AI Ingestion
-JSON schema for graph export/import; master prompts (Syllabus mode: course outline → concept graph; Material mode: text/lecture → annotation layers); model-agnostic prompt + Claude-optimized variant; import flow UI; Orphan Inbox sidebar section for newly ingested nodes awaiting placement; dagre-based auto-layout for imported graphs.
+### Packet 6.5 — Memorizer Lens: Path Finder
+Non-adjacent connected node pair selected at random; player clicks intermediate nodes in correct order; reuses `drillStore` phase architecture. Mastery reward on correct path.
 
-### Later (unordered)
+### Later (ordered priority)
+- **Packet 8** — BYO-AI Ingestion (JSON schema, master prompts, Syllabus + Material modes, Orphan Inbox, dagre auto-layout)
+- **Packet 9** — Auth UI (anonymous → Google upgrade; `getUserId()` reads `firebase.auth().currentUser`)
+- **Packet 9.5** — Firestore security rules (`request.auth.uid == userId` guard)
+- **Packet 11** — Project Packaging (`ClusterDoc` collapse, export to shareable bundle)
+- **Packet 7** — Settings UI (mastery brightness slider, color pickers)
+- **Packet 10** — Search (full-text across titles and layer content)
+- **Packet 12** — Undo/redo (command stack)
+- **Packet 13** — Multi-select (box-select, bulk delete/tag)
+
+### Later (unordered, lower priority)
 - **Auth UI**: anonymous → Google upgrade; `getUserId()` reads from `firebase.auth().currentUser`
 - **Three Lenses**: Memorizer (spaced repetition from layer content), Architect (graph editing + cluster tools), Practitioner (code execution / Q&A via AI)
 - **Project Packaging**: `ClusterDoc` collapse, export to shareable bundle
@@ -361,7 +374,7 @@ StudyTool/                         ← repo root (C:\Users\olivf\StudyToolProjec
 │   │   │   ├── Inspector.tsx
 │   │   │   └── Sidebar.tsx
 │   │   └── workspace/
-│   │       └── FocusWorkspace.tsx   (stub)
+│   │       └── FocusWorkspace.tsx   (drill stage: idle/active/graded)
 │   ├── features/
 │   │   ├── lenses/                  (empty)
 │   │   ├── map/                     (empty)
@@ -378,14 +391,17 @@ StudyTool/                         ← repo root (C:\Users\olivf\StudyToolProjec
 │   │       ├── localBackend.ts
 │   │       └── types.ts
 │   ├── store/
+│   │   ├── drillStore.ts
 │   │   ├── graphStore.ts
 │   │   └── viewStore.ts
 │   ├── styles/
 │   │   ├── globals.css
 │   │   └── mastery.css              (empty, intentional)
 │   ├── types/
+│   │   ├── drill.ts
 │   │   └── graph.ts
 │   ├── utils/
+│   │   ├── clozeSelection.ts
 │   │   ├── edgeStyles.ts
 │   │   └── masteryColor.ts
 │   ├── App.tsx

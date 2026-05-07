@@ -5,6 +5,7 @@ import { Timestamp } from "firebase/firestore";
 import { useViewStore } from "../../store/viewStore";
 import { useGraphStore } from "../../store/graphStore";
 import { masteryToColor } from "../../utils/masteryColor";
+import { useDrillStore } from '../../store/drillStore';
 import type { Layer, EdgeDoc, EdgeType } from "../../types/graph";
 
 interface LayerCardProps {
@@ -204,6 +205,17 @@ export default function Inspector(): JSX.Element {
     s.edges.find((e) => e.id === s.selectedEdgeId)
   );
 
+  const startCloze = useDrillStore((s) => s.startCloze);
+  const setViewModeFocus = useViewStore((s) => s.setViewMode);
+  const drillEligible = node
+    ? node.layers.some(
+        (l) =>
+          l.contentType === 'text' &&
+          typeof l.content === 'string' &&
+          l.content.trim().length >= 30
+      )
+    : false;
+
   const [draft, setDraft] = useState<{ nodeId: string; title: string; tags: string } | null>(null);
 
   useEffect(() => {
@@ -347,6 +359,40 @@ export default function Inspector(): JSX.Element {
                   </div>
                 );
               })()}
+
+              {node && (
+                <div style={{ marginTop: 12, marginBottom: 12 }}>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      if (!drillEligible || !node) return;
+                      startCloze(node);
+                      setViewModeFocus('focus');
+                    }}
+                    disabled={!drillEligible}
+                    style={{
+                      width: '100%',
+                      background: 'var(--accent)',
+                      color: '#fff',
+                      border: 'none',
+                      borderRadius: 6,
+                      padding: '8px',
+                      cursor: drillEligible ? 'pointer' : 'not-allowed',
+                      opacity: drillEligible ? 1 : 0.5,
+                      fontSize: 14,
+                      fontWeight: 500,
+                      fontFamily: 'inherit',
+                    }}
+                  >
+                    Study this node
+                  </button>
+                  {!drillEligible && (
+                    <div style={{ fontSize: 12, color: 'var(--text-muted)', marginTop: 6 }}>
+                      Add a text layer (30+ chars) to drill this node.
+                    </div>
+                  )}
+                </div>
+              )}
 
               <section style={{ display: "flex", flexDirection: "column", gap: 10 }}>
                 <p style={{ fontSize: 12, color: "var(--text-muted)" }}>Layers</p>

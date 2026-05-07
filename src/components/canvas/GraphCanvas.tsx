@@ -196,6 +196,8 @@ function GraphCanvasInner() {
               mastery: { score: 0, lastReviewedAt: null, reviewCount: 0 },
               archived: false,
               clusterId: null,
+              accessCount: 0,
+              lastAccessedAt: null,
             });
             if (id) selectNode(id);
           },
@@ -227,6 +229,8 @@ function GraphCanvasInner() {
               mastery: { score: 0, lastReviewedAt: null, reviewCount: 0 },
               archived: false,
               clusterId: null,
+              accessCount: 0,
+              lastAccessedAt: null,
             });
             if (newId) {
               await createEdge({ source: nodeId, target: newId, type: 'related' });
@@ -247,6 +251,8 @@ function GraphCanvasInner() {
               mastery: { score: 0, lastReviewedAt: null, reviewCount: 0 },
               archived: false,
               clusterId: null,
+              accessCount: 0,
+              lastAccessedAt: null,
             });
             if (newId) selectNode(newId);
           },

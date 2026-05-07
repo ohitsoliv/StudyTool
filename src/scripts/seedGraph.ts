@@ -34,6 +34,8 @@ export async function seedGraph(): Promise<void> {
       mastery: { score: masteryScore, lastReviewedAt: null, reviewCount: 0 },
       archived: false,
       clusterId: null,
+      accessCount: 0,
+      lastAccessedAt: null,
     });
 
   const [
