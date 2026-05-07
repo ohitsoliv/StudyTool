@@ -22,7 +22,12 @@ export interface StorageBackend {
     patch: Partial<NodeDoc>,
   ): Promise<void>;
   deleteNode(userId: string, graphId: string, nodeId: string): Promise<void>;
-
+  updateEdge(
+    userId: string,
+    graphId: string,
+    edgeId: string,
+    partial: Partial<EdgeDoc>,
+  ): Promise<void>;
   listEdges(userId: string, graphId: string): Promise<EdgeDoc[]>;
   createEdge(
     userId: string,

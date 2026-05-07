@@ -10,6 +10,7 @@ import {
   updateNode as fsUpdateNode,
   deleteNode as fsDeleteNode,
   createEdge,
+  updateEdge as fsUpdateEdge,
   deleteEdge as fsDeleteEdge,
 } from '../services/storage';
 
@@ -18,16 +19,19 @@ interface GraphState {
   nodes: NodeDoc[];
   edges: EdgeDoc[];
   selectedNodeId: string | null;
+  selectedEdgeId: string | null;
   loading: boolean;
   error: string | null;
   _unsubscribers: { nodes?: Unsubscribe; edges?: Unsubscribe };
 
   setCurrentGraph: (graphId: string | null) => void;
   selectNode: (nodeId: string | null) => void;
-  addNode: (partial: Omit<NodeDoc, 'id' | 'createdAt' | 'updatedAt'>) => Promise<string>;
+  selectEdge: (edgeId: string | null) => void;
+  createNode: (partial: Omit<NodeDoc, 'id' | 'createdAt' | 'updatedAt'>) => Promise<string | null>;
   updateNode: (nodeId: string, patch: Partial<NodeDoc>) => Promise<void>;
   deleteNode: (nodeId: string) => Promise<void>;
-  addEdge: (partial: Omit<EdgeDoc, 'id' | 'createdAt'>) => Promise<string>;
+  createEdge: (partial: Omit<EdgeDoc, 'id' | 'createdAt'>) => Promise<string | null>;
+  updateEdge: (edgeId: string, patch: Partial<EdgeDoc>) => Promise<void>;
   deleteEdge: (edgeId: string) => Promise<void>;
 }
 
@@ -36,6 +40,7 @@ export const useGraphStore = create<GraphState>((set, get) => ({
   nodes: [],
   edges: [],
   selectedNodeId: null,
+  selectedEdgeId: null,
   loading: false,
   error: null,
   _unsubscribers: {},
@@ -65,12 +70,16 @@ export const useGraphStore = create<GraphState>((set, get) => ({
   },
 
   selectNode(nodeId) {
-    set({ selectedNodeId: nodeId });
+    set({ selectedNodeId: nodeId, selectedEdgeId: null });
   },
 
-  async addNode(partial) {
+  selectEdge(edgeId) {
+    set({ selectedEdgeId: edgeId, selectedNodeId: null });
+  },
+
+  async createNode(partial) {
     const { currentGraphId } = get();
-    if (!currentGraphId) throw new Error('No graph selected');
+    if (!currentGraphId) return null;
     return createNode(getUserId(), currentGraphId, partial);
   },
 
@@ -86,10 +95,21 @@ export const useGraphStore = create<GraphState>((set, get) => ({
     await fsDeleteNode(getUserId(), currentGraphId, nodeId);
   },
 
-  async addEdge(partial) {
+  async createEdge(partial) {
     const { currentGraphId } = get();
-    if (!currentGraphId) throw new Error('No graph selected');
+    if (!currentGraphId) return null;
     return createEdge(getUserId(), currentGraphId, partial);
+  },
+
+  async updateEdge(edgeId, patch) {
+    const { currentGraphId } = get();
+    if (!currentGraphId) return;
+    await fsUpdateEdge(getUserId(), currentGraphId, edgeId, patch);
+    set((state) => ({
+      edges: state.edges.map((e) =>
+        e.id === edgeId ? { ...e, ...patch } : e
+      ),
+    }));
   },
 
   async deleteEdge(edgeId) {
@@ -98,3 +118,19 @@ export const useGraphStore = create<GraphState>((set, get) => ({
     await fsDeleteEdge(getUserId(), currentGraphId, edgeId);
   },
 }));
+
+export function getSelectedEntity():
+  | { kind: 'node'; node: NodeDoc }
+  | { kind: 'edge'; edge: EdgeDoc }
+  | null {
+  const s = useGraphStore.getState();
+  if (s.selectedEdgeId) {
+    const edge = s.edges.find((e) => e.id === s.selectedEdgeId);
+    if (edge) return { kind: 'edge', edge };
+  }
+  if (s.selectedNodeId) {
+    const node = s.nodes.find((n) => n.id === s.selectedNodeId);
+    if (node) return { kind: 'node', node };
+  }
+  return null;
+}

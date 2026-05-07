@@ -87,3 +87,109 @@ a {
   stroke: #6b8afd;
   stroke-width: 2;
 }
+/* === Packet 5: context menu === */
+.canvas-context-menu {
+  position: fixed;
+  z-index: 1000;
+  min-width: 180px;
+  background: #16161a;
+  border: 1px solid #2a2a2f;
+  border-radius: 6px;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.4);
+  padding: 4px 0;
+  font-size: 13px;
+  color: #e8e8ea;
+  user-select: none;
+}
+.canvas-context-menu__item {
+  display: block;
+  width: 100%;
+  text-align: left;
+  background: transparent;
+  border: none;
+  color: inherit;
+  padding: 7px 12px;
+  cursor: pointer;
+  font-size: 13px;
+  font-family: inherit;
+}
+.canvas-context-menu__item:hover { background: #22222a; }
+.canvas-context-menu__item--destructive { color: #d97766; }
+.canvas-context-menu__item--destructive:hover {
+  background: #3a1f1d;
+  color: #ec8e7a;
+}
+.canvas-context-menu__separator {
+  height: 1px;
+  background: #2a2a2f;
+  margin: 4px 0;
+}
+
+/* === Packet 5: inspector inputs (used in edge mode and elsewhere) === */
+.inspector-input,
+.inspector-select,
+.inspector-textarea {
+  width: 100%;
+  background: #0d0d0f;
+  border: 1px solid #2a2a2f;
+  color: #e8e8ea;
+  padding: 6px 8px;
+  border-radius: 4px;
+  font-size: 13px;
+  font-family: inherit;
+  box-sizing: border-box;
+}
+.inspector-input:focus,
+.inspector-select:focus,
+.inspector-textarea:focus {
+  outline: none;
+  border-color: #6b8afd;
+}
+
+.link-btn {
+  background: transparent;
+  border: none;
+  color: #6b8afd;
+  cursor: pointer;
+  padding: 0;
+  font: inherit;
+  text-decoration: underline;
+}
+.link-btn:hover { color: #8fa6ff; }
+
+.icon-btn {
+  background: transparent;
+  border: 1px solid #2a2a2f;
+  color: #e8e8ea;
+  padding: 5px 9px;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 12px;
+  font-family: inherit;
+}
+.icon-btn:hover { background: #22222a; border-color: #3a3a42; }
+.icon-btn--destructive { color: #d97766; border-color: #3a2a28; }
+.icon-btn--destructive:hover {
+  background: #3a1f1d;
+  border-color: #5a2c28;
+  color: #ec8e7a;
+}
+
+/* === Packet 5: handle hover fade (works for any custom node) === */
+.react-flow__node .react-flow__handle {
+  opacity: 0;
+  transition: opacity 150ms ease;
+}
+.react-flow__node:hover .react-flow__handle,
+.react-flow__node.selected .react-flow__handle {
+  opacity: 0.6;
+}
+.react-flow__node .react-flow__handle:hover {
+  opacity: 1 !important;
+}
+
+/* === Packet 5: selected edge emphasis === */
+.react-flow__edge.selected .react-flow__edge-path {
+  stroke-width: 2.5 !important;
+  filter: drop-shadow(0 0 4px rgba(107, 138, 253, 0.5));
+}

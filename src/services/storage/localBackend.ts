@@ -279,6 +279,22 @@ export const localBackend: StorageBackend = {
     await notifyEdges(graphId);
   },
 
+  async updateEdge(_userId, graphId, edgeId, partial) {
+    const db = await getDB();
+    const existing = await db.get('edges', edgeId);
+    if (!existing) throw new Error(`Edge ${edgeId} not found`);
+    const current = deserializeEdge(existing);
+    const updated = {
+      ...current,
+      ...partial,
+      id: edgeId,
+      graphId,
+      createdAt: current.createdAt,
+    } as EdgeDoc & { graphId: string };
+    await db.put('edges', serializeEdge(updated));
+    await notifyEdges(graphId);
+  },
+
   subscribeToNodes(_userId, graphId, callback): Unsubscribe {
     let set = nodeSubs.get(graphId);
     if (!set) {

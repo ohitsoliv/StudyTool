@@ -3,7 +3,7 @@ import { PanelRight } from "lucide-react";
 import Editor from "@monaco-editor/react";
 import { useViewStore } from "../../store/viewStore";
 import { useGraphStore } from "../../store/graphStore";
-import type { Layer } from "../../types/graph";
+import type { Layer, EdgeDoc, EdgeType } from "../../types/graph";
 
 interface LayerCardProps {
   layer: Layer;
@@ -135,10 +135,72 @@ function LayerCard({ layer, index, onPatch }: LayerCardProps): JSX.Element {
   );
 }
 
+const EDGE_TYPES: EdgeType[] = ['parent-child', 'related', 'prerequisite', 'sequence'];
+
+function EdgeInspector({ edge }: { edge: EdgeDoc }) {
+  const nodes = useGraphStore((s) => s.nodes);
+  const selectNode = useGraphStore((s) => s.selectNode);
+  const updateEdge = useGraphStore((s) => s.updateEdge);
+  const deleteEdge = useGraphStore((s) => s.deleteEdge);
+
+  const sourceNode = nodes.find((n) => n.id === edge.source);
+  const targetNode = nodes.find((n) => n.id === edge.target);
+
+  return (
+    <div style={{ padding: 16, color: '#e8e8ea', fontSize: 13 }}>
+      <div style={{ fontSize: 11, textTransform: 'uppercase', letterSpacing: 0.5, color: '#9a9a9f', marginBottom: 12 }}>
+        Edge
+      </div>
+      <div style={{ marginBottom: 14 }}>
+        <div style={{ fontSize: 11, color: '#9a9a9f', marginBottom: 4 }}>Source</div>
+        <button className="link-btn" onClick={() => sourceNode && selectNode(sourceNode.id)}>
+          {sourceNode?.title ?? '(missing)'}
+        </button>
+      </div>
+      <div style={{ marginBottom: 14 }}>
+        <div style={{ fontSize: 11, color: '#9a9a9f', marginBottom: 4 }}>Target</div>
+        <button className="link-btn" onClick={() => targetNode && selectNode(targetNode.id)}>
+          {targetNode?.title ?? '(missing)'}
+        </button>
+      </div>
+      <div style={{ marginBottom: 14 }}>
+        <div style={{ fontSize: 11, color: '#9a9a9f', marginBottom: 4 }}>Type</div>
+        <select
+          className="inspector-select"
+          value={edge.type}
+          onChange={(e) => updateEdge(edge.id, { type: e.target.value as EdgeType })}
+        >
+          {EDGE_TYPES.map((t) => (
+            <option key={t} value={t}>{t}</option>
+          ))}
+        </select>
+      </div>
+      <div style={{ marginBottom: 18 }}>
+        <div style={{ fontSize: 11, color: '#9a9a9f', marginBottom: 4 }}>Label</div>
+        <input
+          className="inspector-input"
+          type="text"
+          value={edge.label ?? ''}
+          placeholder="(optional)"
+          onChange={(e) => updateEdge(edge.id, { label: e.target.value })}
+        />
+      </div>
+      <button className="icon-btn icon-btn--destructive" onClick={() => deleteEdge(edge.id)}>
+        Delete Edge
+      </button>
+    </div>
+  );
+}
+
 export default function Inspector(): JSX.Element {
   const { inspectorCollapsed, toggleInspector } = useViewStore();
   const { selectedNodeId, nodes, updateNode } = useGraphStore();
   const node = nodes.find((n) => n.id === selectedNodeId) ?? null;
+
+  const selectedEdgeId = useGraphStore((s) => s.selectedEdgeId);
+  const selectedEdge = useGraphStore((s) =>
+    s.edges.find((e) => e.id === s.selectedEdgeId)
+  );
 
   const [draft, setDraft] = useState<{ nodeId: string; title: string; tags: string } | null>(null);
 
@@ -176,6 +238,10 @@ export default function Inspector(): JSX.Element {
     });
     void updateNode(node.id, { layers: nextLayers });
   };
+
+  if (selectedEdgeId && selectedEdge) {
+    return <EdgeInspector edge={selectedEdge} />;
+  }
 
   return (
     <aside

@@ -49,4 +49,8 @@ export const subscribeToEdges = (
 
 export const resetAll = () => storage.resetAll?.();
 
+export const updateEdge = (
+  ...args: Parameters<StorageBackend['updateEdge']>
+) => storage.updateEdge(...args);
+
 export type { StorageBackend, Unsubscribe } from './types';

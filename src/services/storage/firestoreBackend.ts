@@ -104,6 +104,13 @@ export const firestoreBackend: StorageBackend = {
     );
   },
 
+  async updateEdge(userId, graphId, edgeId, partial) {
+    await updateDoc(
+      doc(getEdgesRef(userId, graphId), edgeId),
+      stripUndefined({ ...partial }),
+    );
+  },
+
   async deleteNode(userId, graphId, nodeId) {
     await deleteDoc(doc(getNodesRef(userId, graphId), nodeId));
   },
