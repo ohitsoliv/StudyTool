@@ -12,6 +12,10 @@ dist/
 # Vercel
 .vercel
 
+# Firebase local cache/logs
+.firebase/
+firebase-debug.log
+
 # OS
 .DS_Store
 Thumbs.db

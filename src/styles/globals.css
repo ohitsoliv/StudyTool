@@ -1,0 +1,54 @@
+/* =============================================
+   Nexus Study Engine — Global Dark Theme
+   ============================================= */
+
+:root {
+  --bg: #0d0d0f;
+  --text: #e8e8ea;
+  --text-muted: #888896;
+  --accent: #6b8afd;
+  --panel-bg: #16161a;
+  --panel-border: #2a2a2f;
+  --sidebar-width: 260px;
+  --sidebar-collapsed: 48px;
+  --inspector-width: 320px;
+  --inspector-collapsed: 48px;
+}
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+html,
+body,
+#root {
+  height: 100%;
+  width: 100%;
+  overflow: hidden;
+}
+
+body {
+  background: var(--bg);
+  color: var(--text);
+  font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+  font-size: 14px;
+  line-height: 1.5;
+  -webkit-font-smoothing: antialiased;
+}
+
+button {
+  cursor: pointer;
+  border: none;
+  background: none;
+  color: inherit;
+  font: inherit;
+}
+
+a {
+  color: var(--accent);
+  text-decoration: none;
+}
