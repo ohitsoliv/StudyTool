@@ -11,7 +11,7 @@ import {
   deleteNode as fsDeleteNode,
   createEdge,
   deleteEdge as fsDeleteEdge,
-} from '../services/firestoreService';
+} from '../services/storage';
 
 interface GraphState {
   currentGraphId: string | null;

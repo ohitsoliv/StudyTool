@@ -1,6 +1,6 @@
 // src/scripts/seedGraph.ts
 import { Timestamp } from 'firebase/firestore';
-import { getUserId, createGraph, createNode, createEdge } from '../services/firestoreService';
+import { getUserId, createGraph, createNode, createEdge } from '../services/storage';
 
 export async function seedGraph(): Promise<void> {
   const userId = getUserId();

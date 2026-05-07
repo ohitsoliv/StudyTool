@@ -1,11 +1,16 @@
 import { useEffect, useState } from "react";
 import { PanelLeft } from "lucide-react";
-import { getUserId, listGraphs, createGraph } from "../../services/firestoreService";
 import { useGraphStore } from "../../store/graphStore";
 import { GraphMetadata } from "../../types/graph";
 import { seedGraph } from "../../scripts/seedGraph";
 import { useViewStore } from "../../store/viewStore";
-
+import {
+  listGraphs,
+  createGraph,
+  getUserId,
+  STORAGE_MODE,
+  resetAll,
+} from '../../services/storage';
 export default function Sidebar(): JSX.Element {
   const { sidebarCollapsed, toggleSidebar } = useViewStore();
   const [graphs, setGraphs] = useState<GraphMetadata[]>([]);
@@ -33,6 +38,13 @@ export default function Sidebar(): JSX.Element {
   const handleSeed = async (): Promise<void> => {
     if (!confirm('Seed the database with "Embedded Systems Sandbox"?')) return;
     await seedGraph();
+    await fetchGraphs();
+  };
+
+  const handleResetLocal = async () => {
+    if (!window.confirm('Wipe all local data? This cannot be undone.')) return;
+    setCurrentGraph(null);
+    await resetAll();
     await fetchGraphs();
   };
 
@@ -174,6 +186,29 @@ export default function Sidebar(): JSX.Element {
           >
             Seed Database
           </button>
+
+          <div style={{ marginTop: 12, fontSize: 11, color: 'var(--text-muted, #888)' }}>
+            Mode: {STORAGE_MODE.toUpperCase()}
+          </div>
+
+          {STORAGE_MODE === 'local' && (
+            <button
+              type="button"
+              onClick={handleResetLocal}
+              style={{
+                marginTop: 8,
+                background: 'transparent',
+                border: '1px solid rgba(200, 80, 80, 0.4)',
+                color: '#c0504a',
+                borderRadius: 4,
+                padding: '4px 8px',
+                fontSize: 11,
+                cursor: 'pointer',
+              }}
+            >
+              Reset Local Data
+            </button>
+          )}
         </nav>
       )}
     </aside>
