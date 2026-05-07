@@ -350,17 +350,17 @@ export default function Inspector(): JSX.Element {
 
               <section style={{ display: "flex", flexDirection: "column", gap: 10 }}>
                 <p style={{ fontSize: 12, color: "var(--text-muted)" }}>Layers</p>
-                {node.layers.map((layer, index) => (
-                  <LayerCard
-                    key={`${node.id}-${layer.depth}-${index}`}
-                    layer={layer}
-                    index={index}
-                    onPatch={(patch) => patchLayer(index, patch)}
-                  />
-                ))}
+                <div style={{ maxHeight: 400, overflowY: "auto", display: "flex", flexDirection: "column", gap: 10 }}>
+                  {node.layers.map((layer, index) => (
+                    <LayerCard
+                      key={`${node.id}-${layer.depth}-${index}`}
+                      layer={layer}
+                      index={index}
+                      onPatch={(patch) => patchLayer(index, patch)}
+                    />
+                  ))}
+                </div>
                 <button
-                  className="icon-btn"
-                  style={{ marginTop: 8 }}
                   onClick={() => {
                     const existingDepths = node.layers.map((l) => l.depth);
                     const newDepth = existingDepths.length === 0 ? 1 : Math.max(...existingDepths) + 1;
@@ -371,6 +371,21 @@ export default function Inspector(): JSX.Element {
                       createdAt: Timestamp.now(),
                     };
                     void updateNode(node.id, { layers: [...node.layers, newLayer] });
+                  }}
+                  style={{
+                    width: '100%',
+                    marginTop: 8,
+                    padding: '8px 12px',
+                    background: 'transparent',
+                    border: '1px dashed rgba(107, 138, 253, 0.5)',
+                    borderRadius: 6,
+                    color: '#6b8afd',
+                    fontSize: 12,
+                    cursor: 'pointer',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    gap: 6,
                   }}
                 >
                   + Add Layer

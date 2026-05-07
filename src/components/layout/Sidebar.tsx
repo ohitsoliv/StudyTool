@@ -16,6 +16,8 @@ export default function Sidebar(): JSX.Element {
   const [graphs, setGraphs] = useState<GraphMetadata[]>([]);
   const [loading, setLoading] = useState(true);
   const { currentGraphId, setCurrentGraph } = useGraphStore();
+  const [creatingGraph, setCreatingGraph] = useState(false);
+  const [newGraphName, setNewGraphName] = useState('');
 
   const fetchGraphs = async (): Promise<void> => {
     const result = await listGraphs(getUserId());
@@ -27,12 +29,24 @@ export default function Sidebar(): JSX.Element {
     void fetchGraphs();
   }, []);
 
-  const handleNewGraph = async (): Promise<void> => {
-    const name = prompt("Graph name:");
+  const startCreate = (): void => {
+    setNewGraphName('');
+    setCreatingGraph(true);
+  };
+
+  const commitCreate = async (): Promise<void> => {
+    const name = newGraphName.trim();
+    setCreatingGraph(false);
+    setNewGraphName('');
     if (!name) return;
     const id = await createGraph(getUserId(), name);
     await fetchGraphs();
     setCurrentGraph(id);
+  };
+
+  const cancelCreate = (): void => {
+    setCreatingGraph(false);
+    setNewGraphName('');
   };
 
   const handleSeed = async (): Promise<void> => {
@@ -148,19 +162,45 @@ export default function Sidebar(): JSX.Element {
             </button>
           ))}
 
-          <button
-            onClick={handleNewGraph}
-            style={{
-              marginTop: "0.35rem",
-              cursor: "pointer",
-              border: "1px solid var(--panel-border)",
-              borderRadius: 6,
-              padding: "0.45rem 0.6rem",
-              textAlign: "left",
-            }}
-          >
-            + New Graph
-          </button>
+          {creatingGraph ? (
+            <input
+              autoFocus
+              value={newGraphName}
+              onChange={(e) => setNewGraphName(e.target.value)}
+              onBlur={() => void commitCreate()}
+              onKeyDown={(e) => {
+                if (e.key === 'Enter') void commitCreate();
+                if (e.key === 'Escape') cancelCreate();
+              }}
+              placeholder="Graph name…"
+              style={{
+                width: '100%',
+                padding: '0.45rem 0.6rem',
+                background: '#1a1a1f',
+                border: '1px solid #6b8afd',
+                borderRadius: 6,
+                color: '#e8e8ea',
+                fontSize: 13,
+                outline: 'none',
+                boxSizing: 'border-box',
+                marginTop: '0.35rem',
+              }}
+            />
+          ) : (
+            <button
+              onClick={startCreate}
+              style={{
+                marginTop: "0.35rem",
+                cursor: "pointer",
+                border: "1px solid var(--panel-border)",
+                borderRadius: 6,
+                padding: "0.45rem 0.6rem",
+                textAlign: "left",
+              }}
+            >
+              + New Graph
+            </button>
+          )}
 
           <p
             style={{
