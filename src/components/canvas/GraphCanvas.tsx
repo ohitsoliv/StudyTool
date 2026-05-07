@@ -1,62 +1,68 @@
-import { useCallback } from "react";
+// src/components/canvas/GraphCanvas.tsx
+import { useCallback } from 'react';
 import {
   ReactFlow,
   Background,
-  BackgroundVariant,
   Controls,
-  useNodesState,
-  useEdgesState,
-  addEdge,
-  Connection,
-} from "@xyflow/react";
-import "@xyflow/react/dist/style.css";
+  Node,
+  Edge,
+  NodeMouseHandler,
+  OnNodeDrag,
+  ReactFlowProvider,
+} from '@xyflow/react';
+import '@xyflow/react/dist/style.css';
+import { useGraphStore } from '../../store/graphStore';
 
-const initialNodes = [
-  {
-    id: "1",
-    position: { x: 250, y: 200 },
-    data: { label: "Hello Nexus" },
-    style: {
-      background: "#16161a",
-      color: "#e8e8ea",
-      border: "1px solid #6b8afd",
-      borderRadius: "8px",
-      padding: "12px 20px",
-      fontSize: "14px",
-    },
-  },
-];
+function GraphCanvasInner() {
+  const { nodes: nodeDocs, edges: edgeDocs, currentGraphId, selectNode, updateNode } = useGraphStore();
 
-const initialEdges: never[] = [];
+  const rfNodes: Node[] = nodeDocs.map(n => ({
+    id: n.id,
+    position: n.position,
+    data: { label: n.title },
+  }));
 
-export default function GraphCanvas(): JSX.Element {
-  const [nodes, , onNodesChange] = useNodesState(initialNodes);
-  const [edges, setEdges, onEdgesChange] = useEdgesState(initialEdges);
+  const rfEdges: Edge[] = edgeDocs.map(e => ({
+    id: e.id,
+    source: e.source,
+    target: e.target,
+    label: e.label,
+  }));
 
-  const onConnect = useCallback(
-    (params: Connection) => setEdges((eds) => addEdge(params, eds)),
-    [setEdges]
-  );
+  const handleNodeClick: NodeMouseHandler = useCallback((_event, node) => {
+    selectNode(node.id);
+  }, [selectNode]);
+
+  const handleNodeDragStop: OnNodeDrag = useCallback((_event, node) => {
+    updateNode(node.id, { position: node.position });
+  }, [updateNode]);
+
+  if (!currentGraphId || nodeDocs.length === 0) {
+    return (
+      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: '100%', color: 'var(--text-muted, #888)' }}>
+        No graph selected. Open the sidebar to create or seed one.
+      </div>
+    );
+  }
 
   return (
-    <div style={{ width: "100%", height: "100%", background: "#0d0d0f" }}>
-      <ReactFlow
-        nodes={nodes}
-        edges={edges}
-        onNodesChange={onNodesChange}
-        onEdgesChange={onEdgesChange}
-        onConnect={onConnect}
-        fitView
-        colorMode="dark"
-      >
-        <Background
-          color="#2a2a2f"
-          variant={BackgroundVariant.Dots}
-          gap={20}
-          size={1.5}
-        />
-        <Controls />
-      </ReactFlow>
-    </div>
+    <ReactFlow
+      nodes={rfNodes}
+      edges={rfEdges}
+      onNodeClick={handleNodeClick}
+      onNodeDragStop={handleNodeDragStop}
+      fitView
+    >
+      <Background />
+      <Controls />
+    </ReactFlow>
+  );
+}
+
+export default function GraphCanvas() {
+  return (
+    <ReactFlowProvider>
+      <GraphCanvasInner />
+    </ReactFlowProvider>
   );
 }
