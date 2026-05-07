@@ -2,7 +2,7 @@
 
 # Nexus Study Engine
 
-**Last updated: 2026-05-07 (Packet 5.2)**
+**Last updated: 2026-05-07 (Hotfixes 5.x)**
 
 ---
 
@@ -21,8 +21,9 @@ Nexus Study Engine is a spatial knowledge graph for solo deep-learning. The user
 | Packet 3 | Node Inspector with title/tag editing and layer cards (text/code/math), `LayerCard` component with Monaco for code layers, mastery color system (`masteryToColor`), `StudyNode` left-border mastery heatmap and zoom-based layer reveal. |
 | Packet 4 | Env-driven storage backend selector (`VITE_STORAGE_MODE`), IndexedDB local backend (idb), Firestore backend extracted, standalone re-exports in `storage/index.ts`, Sidebar STORAGE_MODE badge and Reset Local Data button. |
 | Packet 5 | Typed edge system (`EdgeType`), `selectedEdgeId` / `selectEdge` / `updateEdge` in graphStore, `EdgeInspector` component, canvas context menus (right-click pane/node/edge), `CanvasContextMenu` component, `edgeStyles.ts` visual map, keyboard Delete/Backspace handler, drag-to-connect creates `related` edge. |
-| Packet 5.2 | Add Layer button: scroll-contained layer list with button pinned below; dashed-accent button style. Mastery bar: `min-width: 2px` on fill so 0% still shows a sliver; track background improved. Replaced `window.prompt()` in Sidebar `handleNewGraph` with inline autofocused input (Enter to commit, Escape to cancel). Confirmed `seedGraph.ts` mastery scores were already varied (0.20–0.90); prior 0% display was stale IDB data from before a reset. |
 | Packet 5.1 | Inspector cleanup: mastery progress bar (horizontal, colored via `masteryToColor`), "+ Add Layer" button at bottom of layers list, draft-state pattern verified correct (blur-to-commit, discard on node switch). |
+| Packet 5.2 | Add Layer button: scroll-contained layer list with button pinned below; dashed-accent button style. Mastery bar: `min-width: 2px` on fill so 0% still shows a sliver; track background improved. Replaced `window.prompt()` in Sidebar `handleNewGraph` with inline autofocused input (Enter to commit, Escape to cancel). Confirmed `seedGraph.ts` mastery scores were already varied (0.20–0.90); prior 0% display was stale IDB data from before a reset. |
+| Hotfixes 5.x | Self-loop guard added to `onConnect` (`conn.source === conn.target` early return — was missing entirely). Escape-to-close on `CanvasContextMenu` hardened to capture-phase listeners on both `window` and `document` for reliable dismissal. Edge context menu separator verified present in both data and renderer (no change needed). |
 
 **Next: Packet 6 — BYO-AI Ingestion** (JSON schema, master prompts, Syllabus + Material modes, Orphan Inbox, dagre auto-layout).
 
@@ -314,7 +315,7 @@ The user codes well but uses AI for bulk generation, then reviews and tweaks the
 - **Add Layer button** lives below the layers list. Layer cards scroll in a 400px-max container; the button is pinned below the scroll region and is always visible without scrolling past layers.
 - **No undo/redo.** All mutations are fire-and-forget; no command stack.
 - **No multi-select.** Node and edge selection is single-item only.
-- **Self-loops blocked silently.** `onConnect` does nothing if `source === target`; no user feedback.
+- **Self-loops blocked silently.** `onConnect` returns early if `source === target`; no user feedback (the drag just cancels with no message).
 - **`getUserId()` hardcoded to `'dev-user'`** in both backends. Auth not implemented.
 - **Cloud mode rejects unauthenticated writes.** `firestore.rules` not deployed; Firestore defaults lock it down. Cloud mode is non-functional until Auth ships.
 - **`src/styles/mastery.css` is empty** — non-fatal Vite CSS warning on every build.
