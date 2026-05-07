@@ -98,6 +98,7 @@ function GraphCanvasInner() {
 
   const onConnect = useCallback(
     async (conn: Connection) => {
+      if (drillPhase === 'active') return;
       if (!conn.source || !conn.target) return;
       if (conn.source === conn.target) return;
       const id = await createEdge({
@@ -107,7 +108,7 @@ function GraphCanvasInner() {
       });
       if (id) selectEdge(id);
     },
-    [createEdge, selectEdge]
+    [createEdge, selectEdge, drillPhase]
   );
 
   const onNodeClick = useCallback(
@@ -166,6 +167,7 @@ function GraphCanvasInner() {
   useEffect(() => {
     const handler = (e: KeyboardEvent) => {
       if (e.key !== 'Delete' && e.key !== 'Backspace') return;
+      if (drillPhase === 'active') return;
       const ae = document.activeElement as HTMLElement | null;
       if (ae) {
         const tag = ae.tagName;
@@ -182,7 +184,7 @@ function GraphCanvasInner() {
     };
     window.addEventListener('keydown', handler);
     return () => window.removeEventListener('keydown', handler);
-  }, [selectedNodeId, selectedEdgeId, deleteNode, deleteEdge]);
+  }, [selectedNodeId, selectedEdgeId, deleteNode, deleteEdge, drillPhase]);
 
   const menuItems: MenuItem[] = useMemo(() => {
     if (!menu) return [];

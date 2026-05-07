@@ -2,7 +2,7 @@
 
 # Nexus Study Engine
 
-**Last updated: 2026-05-07 (Packet 6.5)**
+**Last updated: 2026-05-07 (Packet 8a)**
 
 ---
 
@@ -26,6 +26,7 @@ Nexus Study Engine is a spatial knowledge graph for solo deep-learning. The user
 | Hotfixes 5.x | Self-loop guard added to `onConnect` (`conn.source === conn.target` early return — was missing entirely). Escape-to-close on `CanvasContextMenu` hardened to capture-phase listeners on both `window` and `document` for reliable dismissal. Edge context menu separator verified present in both data and renderer (no change needed). |
 | Packet 6 | **Memorizer Lens — Cloze Collapse.** New `drillStore` (Zustand), `src/types/drill.ts`, and deterministic `clozeSelection` util (seeded LCG from text hash, 1–8 blanks, content-word bias). `FocusWorkspace` becomes full drill stage with `idle`/`active`/`graded` phases. "Study this node" button in Inspector node mode (eligible iff a text layer ≥ 30 chars). `NodeDoc` gained `accessCount: number` and `lastAccessedAt: Timestamp \| null`. `viewStore.setViewMode` added for programmatic mode switching. Mastery formula on submit: +0.10 perfect / +0.05 ≥ 80% / 0 in 50–80% / −0.10 below 50%, clamped [0, 1]. |
 | Packet 6.5 | **Memorizer Lens — Path Finder.** New `src/utils/pathFinding.ts` (`getNeighbors`, `findEligiblePair`, `shortestPathLength`). `PathFinderDrill` type added to `drill.ts` union; `drillStore` extended with `startPathFinder`, `clickPathStep`, `giveUp` actions. `GraphCanvas` routes node clicks to `clickPathStep` during active drill; pane click no-ops. `StudyNode` subscribes to drillStore and shows per-node visual state: source (blue glow), target (green glow), in-path (orange dashed outline). New `PathFinderOverlay` floating panel (canvas-relative, top-center, z-50): active phase shows breadcrumb + Undo / Submit / Give Up; graded phase shows verdict, path summary, mastery delta, Pick another / Done. Sidebar gains a "Drills" section with Path Finder button + 3s inline error on sparse graph. Edge traversal rules: `parent-child` and `related` bidirectional; `prerequisite` and `sequence` source→target only. Mastery on submit: +0.10 shortest path / +0.05 one hop over / 0 two hops over / −0.10 invalid or give up; applied to start + end nodes only. |
+| Packet 8a | Drill-phase canvas edit lockout. Edge creation and delete-key handler locked out during active drill phases; node position drag still allowed. |
 
 **Next: Packet 8 — Architect Lens** (Missing Link, Sorter, Cluster Title drills).
 
