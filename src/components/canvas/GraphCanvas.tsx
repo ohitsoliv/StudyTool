@@ -1,6 +1,7 @@
 import { useCallback } from 'react';
 import {
   ReactFlow,
+  ReactFlowProvider,
   Background,
   Controls,
   useStore,
@@ -37,7 +38,8 @@ function toFlowEdge(edge: { id: string; source: string; target: string; type?: s
   return { id: edge.id, source: edge.source, target: edge.target };
 }
 
-export default function GraphCanvas() {
+// Inner component — rendered inside ReactFlowProvider so useStore has context
+function GraphCanvasInner() {
   const { nodes: nodeDocs, edges: edgeDocs, selectNode, updateNode } = useGraphStore();
 
   // Subscribe to viewport zoom from React Flow internal store
@@ -65,19 +67,27 @@ export default function GraphCanvas() {
   }, [selectNode]);
 
   return (
+    <ReactFlow
+      nodes={flowNodes}
+      edges={flowEdges}
+      nodeTypes={nodeTypes}
+      onNodeClick={onNodeClick}
+      onNodeDragStop={onNodeDragStop}
+      onPaneClick={onPaneClick}
+      fitView
+    >
+      <Background color="rgba(255,255,255,0.06)" gap={20} size={1} />
+      <Controls />
+    </ReactFlow>
+  );
+}
+
+export default function GraphCanvas() {
+  return (
     <div style={{ width: '100%', height: '100%' }}>
-      <ReactFlow
-        nodes={flowNodes}
-        edges={flowEdges}
-        nodeTypes={nodeTypes}
-        onNodeClick={onNodeClick}
-        onNodeDragStop={onNodeDragStop}
-        onPaneClick={onPaneClick}
-        fitView
-      >
-        <Background color="rgba(255,255,255,0.06)" gap={20} size={1} />
-        <Controls />
-      </ReactFlow>
+      <ReactFlowProvider>
+        <GraphCanvasInner />
+      </ReactFlowProvider>
     </div>
   );
 }
