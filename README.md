@@ -57,9 +57,9 @@ Nexus Study Engine is a spatial knowledge graph for solo deep-learning. The user
 ```
 App (Ctrl+E handler)
 └── AppShell (CSS grid: auto | 1fr | auto, 100vh)
-    ├── Sidebar          (left panel, collapsible, graph list)
+  ├── Sidebar          (left panel, collapsible, graph list + Drills entry point)
     ├── main             (center, switches on viewMode)
-    │   ├── GraphCanvas  (canvas mode) → ReactFlowProvider > GraphCanvasInner
+  │   ├── GraphCanvas  (canvas mode) → ReactFlowProvider > GraphCanvasInner + PathFinderOverlay
     │   └── FocusWorkspace (drill stage: idle/active/graded phases)
     └── Inspector        (right panel, collapsible, node↔edge mode)
         ├── EdgeInspector  (renders when selectedEdgeId set)
@@ -397,6 +397,7 @@ StudyTool/                         ← repo root (C:\Users\olivf\StudyToolProjec
 │   │   ├── canvas/
 │   │   │   ├── CanvasContextMenu.tsx
 │   │   │   ├── GraphCanvas.tsx
+│   │   │   ├── PathFinderOverlay.tsx
 │   │   │   └── StudyNode.tsx
 │   │   ├── layout/
 │   │   │   ├── AppShell.tsx

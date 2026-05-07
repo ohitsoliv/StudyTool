@@ -227,7 +227,6 @@ export default function Sidebar(): JSX.Element {
               onClick={() => {
                 const ok = useDrillStore.getState().startPathFinder();
                 if (ok) {
-                  useViewStore.getState().setViewMode('focus');
                 } else {
                   setDrillUnavailable(true);
                 }
