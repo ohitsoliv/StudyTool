@@ -1,16 +1,18 @@
 import React, { memo } from 'react';
 import { Handle, Position } from '@xyflow/react';
-import type { NodeProps } from '@xyflow/react';
+import type { Node, NodeProps } from '@xyflow/react';
 import type { Layer } from '../../types/graph';
 import { masteryToColor } from '../../utils/masteryColor';
 
-export interface StudyNodeData {
+export interface StudyNodeData extends Record<string, unknown> {
   title: string;
   mastery: number;
   layerCount: number;
   layers: Layer[];
   zoomLevel: number;
 }
+
+type StudyNodeType = Node<StudyNodeData, 'study'>;
 
 const HANDLE_STYLE: React.CSSProperties = {
   width: 6,
@@ -25,8 +27,8 @@ function truncate(str: string, max: number): string {
   return str.length > max ? str.slice(0, max) + '…' : str;
 }
 
-function StudyNode({ data, selected }: NodeProps) {
-  const { title, mastery, layerCount, layers, zoomLevel } = data as StudyNodeData;
+function StudyNode({ data, selected }: NodeProps<StudyNodeType>) {
+  const { title, mastery, layerCount, layers, zoomLevel } = data;
   const borderColor = masteryToColor(mastery);
   const layer1 = layers?.[0];
   const layer2 = layers?.[1];
