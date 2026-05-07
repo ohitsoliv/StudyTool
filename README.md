@@ -59,10 +59,10 @@ App (Ctrl+E handler)
     ├── Sidebar          (left panel, collapsible, graph list)
     ├── main             (center, switches on viewMode)
     │   ├── GraphCanvas  (canvas mode) → ReactFlowProvider > GraphCanvasInner
-    │   └── FocusWorkspace (focus mode, not yet built out)
+    │   └── FocusWorkspace (drill stage: idle/active/graded phases)
     └── Inspector        (right panel, collapsible, node↔edge mode)
         ├── EdgeInspector  (renders when selectedEdgeId set)
-        └── node-mode      (title, mastery bar, tags, LayerCards, Add Layer btn)
+        └── node-mode      (title, mastery bar, Study-this-node btn, tags, LayerCards, Add Layer btn)
 ```
 
 ### State
@@ -84,7 +84,7 @@ graphStore (Zustand)
 viewStore (Zustand)
   viewMode: 'canvas' | 'focus'
   sidebarCollapsed, inspectorCollapsed
-  toggleViewMode, toggleSidebar, toggleInspector
+  toggleViewMode, setViewMode, toggleSidebar, toggleInspector
 ```
 
 ### Storage abstraction
@@ -331,29 +331,48 @@ The user codes well but uses AI for bulk generation, then reviews and tweaks the
 
 ## 11. Roadmap
 
+The order below is locked. Packet 7 is intentionally late so the manual-build study loop validates end-to-end before ingestion scales it.
+
 ### Packet 6.5 — Memorizer Lens: Path Finder
-Non-adjacent connected node pair selected at random; player clicks intermediate nodes in correct order; reuses `drillStore` phase architecture. Mastery reward on correct path.
+Non-adjacent connected node pair selected at random; user clicks intermediate nodes in correct order; parent-child and related edges traversable either direction, prerequisite and sequence direction-respecting. Reuses `drillStore` phase architecture; mastery on correct path.
 
-### Later (ordered priority)
-- **Packet 8** — BYO-AI Ingestion (JSON schema, master prompts, Syllabus + Material modes, Orphan Inbox, dagre auto-layout)
-- **Packet 9** — Auth UI (anonymous → Google upgrade; `getUserId()` reads `firebase.auth().currentUser`)
-- **Packet 9.5** — Firestore security rules (`request.auth.uid == userId` guard)
-- **Packet 11** — Project Packaging (`ClusterDoc` collapse, export to shareable bundle)
-- **Packet 7** — Settings UI (mastery brightness slider, color pickers)
-- **Packet 10** — Search (full-text across titles and layer content)
-- **Packet 12** — Undo/redo (command stack)
-- **Packet 13** — Multi-select (box-select, bulk delete/tag)
+### Packet 8 — Architect Lens (three drills, one packet)
+- **Missing Link**: pick two semantically related but unconnected nodes (no current path; share tags or 2-hop neighbors). User draws an edge, picks a type, writes a one-sentence justification stored in `edge.label`.
+- **Sorter**: detach a parent's children, scramble at canvas bottom; user drags each back under correct parent. Validates against original parent-child edges.
+- **Cluster Title**: pick a connected sub-cluster, hide parent's title; user types it. Graduated string match — exact 1.0 / Levenshtein ≤2 0.9 / one contains other 0.7 / ≥50% word overlap 0.5; pass ≥0.7.
+- All three update mastery via the standard formula. No AI grading.
 
-### Later (unordered, lower priority)
-- **Auth UI**: anonymous → Google upgrade; `getUserId()` reads from `firebase.auth().currentUser`
-- **Three Lenses**: Memorizer (spaced repetition from layer content), Architect (graph editing + cluster tools), Practitioner (code execution / Q&A via AI)
-- **Project Packaging**: `ClusterDoc` collapse, export to shareable bundle
-- **Settings UI**: mastery brightness slider, `--mastery-low/mid/high` color pickers
-- **Search**: full-text across node titles and layer content
-- **Undo/redo**: command stack (Zustand middleware or external)
-- **Multi-select**: box-select on canvas, bulk delete/tag
-- **Firestore security rules**: `request.auth.uid == userId` guard on all paths
-- **Delete node cascades to edges**: currently `deleteNode` does not delete incident edges; they become dangling references
+### Packet 9 — Practitioner Lens: Scenario Builder
+User-typed problem statement → dual-view (canvas + FocusWorkspace open simultaneously); user drags relevant nodes into the workspace as an ordered pipeline; user self-grades correct/partial/wrong; mastery applied to all involved nodes.
+
+### Packet 9.5 — Practitioner Lens: The Debugger
+New schema field `brokenVersion?: string` on Layer. User authors a broken version of a code/math layer; drill renders the broken version in Monaco with edge-connected nodes accessible in a side panel; whitespace-flexible diff against canonical; mastery on submit.
+
+### Packet 11 — Settings, Polish, Keyboard Shortcuts, Edge Nicknames
+- Settings panel: `--mastery-brightness` slider, color stop pickers for `--mastery-low/mid/high`.
+- Deferred visual polish: E1 (related edge stroke ~0.85 opacity, slightly thicker), E2 (handle sizing + hover tooltip), E4 (Inspector edge-mode inline Source → Target, Created timestamp, trash to header).
+- Keyboard shortcut registry in `src/lib/shortcuts.ts`. Initial set: Ctrl+E view toggle, Ctrl+K search, S study selected, N new at cursor, Esc deselect, ?/Ctrl+/ open legend.
+- Edge nicknames: per-user display rename per `EdgeType` (underlying type unchanged).
+- Floating canvas legend (bottom-right) for edge types + nicknames.
+- Quick Start sidebar UX for empty graphs: Import from JSON / Build from scratch / Generate a topic outline (modal showing copyable Topic Outline prompt).
+- Ctrl+K full-text search across node titles and Layer 1 content.
+
+### Packet 7 — BYO-AI Ingestion (intentionally late)
+Four prompt variants — Syllabus, Material, Code Project, Topic Outline — each with a model-agnostic and a Claude-optimized version (8 prompt files in `docs/ingestion/`). JSON schema in `docs/ingestion/schema.{md,json}`, validated on import. Sidebar "Import from JSON" → preview modal (X nodes, Y edges, target graph picker) → per-import toggle (Stage in Orphan Inbox vs Auto-commit) → apply. Orphan Inbox = collapsible Sidebar section, drag-to-canvas, "Add All" with auto-layout. Dagre for nodes without position hints. Implicit tags from prompts. No server-side processing.
+
+### Packet 10 — Optional Cloud Sync
+Local mode remains default forever, no login required. "Enable Cloud Sync" in Settings; Firebase Auth UI (anonymous default, optional Google upgrade); one-way local→cloud migration of existing local graphs; `firestore.rules` deployed (`users/{userId}/{document=**}` → `request.auth.uid == userId`); `getUserId()` reads `auth.currentUser` when cloud mode active, falls back to `'dev-user'` otherwise.
+
+### Packet 12 — Refine Prompts + Heavy-Use + Time-Based Decay
+Refine Prompt indicator on nodes meeting threshold (`accessCount ≥ 10` AND oldest layer > 90 days) → modal: "You created this layer [X months] ago. Has your understanding evolved?" with Add new layer (default) / Edit existing / Dismiss for 30/90/never days. Adding always preserves prior layers. Time-based decay on app load: for nodes with `reviewCount > 0` AND `lastReviewedAt` > 7 days, `mastery.score -= 0.02 × weeks_since_review`, floor 0.3. Never decay never-reviewed nodes.
+
+### Packet 13 — Project Packaging (Archive Nodes)
+Lasso-select on canvas (modifier+drag or toolbar). "Archive Selection" collapses into a single Archive Node (dense stack-of-cards visual, count badge); reversible on click. Uses existing `clusterId` field. Archive Nodes searchable while collapsed (via Packet 11's Ctrl+K). Nestable (archives within archives).
+
+### Standing tech-debt items (no packet assigned)
+- `deleteNode` cascades to incident edges (currently leaves dangling references).
+- Empty scaffolding directories: `src/features/`, `src/hooks/`, `src/components/body/`.
+- Stale `StudyTool/src/App.jsx` + `main.jsx` at repo root.
 
 ---
 
