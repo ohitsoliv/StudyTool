@@ -15,9 +15,11 @@ import {
 import '@xyflow/react/dist/style.css';
 import { Timestamp } from 'firebase/firestore';
 import { useGraphStore } from '../../store/graphStore';
+import { useDrillStore } from '../../store/drillStore';
 import StudyNode from './StudyNode';
 import { CanvasContextMenu, type MenuItem } from './CanvasContextMenu';
 import { applyEdgeVisual } from '../../utils/edgeStyles';
+import PathFinderOverlay from './PathFinderOverlay';
 
 const nodeTypes = { study: StudyNode };
 
@@ -35,6 +37,9 @@ function GraphCanvasInner() {
   const selectedEdgeId = useGraphStore((s) => s.selectedEdgeId);
   const selectNode = useGraphStore((s) => s.selectNode);
   const selectEdge = useGraphStore((s) => s.selectEdge);
+  const clickPathStep = useDrillStore((s) => s.clickPathStep);
+  const drillPhase = useDrillStore((s) => s.phase);
+  const currentDrill = useDrillStore((s) => s.currentDrill);
   const createNode = useGraphStore((s) => s.createNode);
   const createEdge = useGraphStore((s) => s.createEdge);
   const updateNode = useGraphStore((s) => s.updateNode);
@@ -106,8 +111,14 @@ function GraphCanvasInner() {
   );
 
   const onNodeClick = useCallback(
-    (_e: React.MouseEvent, node: Node) => selectNode(node.id),
-    [selectNode]
+    (_e: React.MouseEvent, node: Node) => {
+      if (drillPhase === 'active' && currentDrill?.kind === 'path-finder') {
+        clickPathStep(node.id);
+        return;
+      }
+      selectNode(node.id);
+    },
+    [selectNode, clickPathStep, drillPhase, currentDrill]
   );
 
   const onEdgeClick = useCallback(
@@ -116,9 +127,10 @@ function GraphCanvasInner() {
   );
 
   const onPaneClick = useCallback(() => {
+    if (drillPhase === 'active' && currentDrill?.kind === 'path-finder') return;
     selectNode(null);
     setMenu(null);
-  }, [selectNode]);
+  }, [selectNode, drillPhase, currentDrill]);
 
   const onPaneContextMenu = useCallback(
     (event: React.MouseEvent | MouseEvent) => {
@@ -306,7 +318,7 @@ function GraphCanvasInner() {
   ]);
 
   return (
-    <div ref={wrapperRef} style={{ width: '100%', height: '100%' }}>
+    <div ref={wrapperRef} style={{ width: '100%', height: '100%', position: 'relative' }}>
       <ReactFlow
         nodes={rfNodes}
         edges={rfEdges}
@@ -327,6 +339,7 @@ function GraphCanvasInner() {
         <Background color="rgba(255,255,255,0.06)" gap={20} size={1} />
         <Controls />
       </ReactFlow>
+      <PathFinderOverlay />
       {menu && (
         <CanvasContextMenu
           x={menu.x}

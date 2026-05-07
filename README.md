@@ -2,7 +2,7 @@
 
 # Nexus Study Engine
 
-**Last updated: 2026-05-07 (Packet 6)**
+**Last updated: 2026-05-07 (Packet 6.5)**
 
 ---
 
@@ -25,8 +25,9 @@ Nexus Study Engine is a spatial knowledge graph for solo deep-learning. The user
 | Packet 5.2 | Add Layer button: scroll-contained layer list with button pinned below; dashed-accent button style. Mastery bar: `min-width: 2px` on fill so 0% still shows a sliver; track background improved. Replaced `window.prompt()` in Sidebar `handleNewGraph` with inline autofocused input (Enter to commit, Escape to cancel). Confirmed `seedGraph.ts` mastery scores were already varied (0.20–0.90); prior 0% display was stale IDB data from before a reset. |
 | Hotfixes 5.x | Self-loop guard added to `onConnect` (`conn.source === conn.target` early return — was missing entirely). Escape-to-close on `CanvasContextMenu` hardened to capture-phase listeners on both `window` and `document` for reliable dismissal. Edge context menu separator verified present in both data and renderer (no change needed). |
 | Packet 6 | **Memorizer Lens — Cloze Collapse.** New `drillStore` (Zustand), `src/types/drill.ts`, and deterministic `clozeSelection` util (seeded LCG from text hash, 1–8 blanks, content-word bias). `FocusWorkspace` becomes full drill stage with `idle`/`active`/`graded` phases. "Study this node" button in Inspector node mode (eligible iff a text layer ≥ 30 chars). `NodeDoc` gained `accessCount: number` and `lastAccessedAt: Timestamp \| null`. `viewStore.setViewMode` added for programmatic mode switching. Mastery formula on submit: +0.10 perfect / +0.05 ≥ 80% / 0 in 50–80% / −0.10 below 50%, clamped [0, 1]. |
+| Packet 6.5 | **Memorizer Lens — Path Finder.** New `src/utils/pathFinding.ts` (`getNeighbors`, `findEligiblePair`, `shortestPathLength`). `PathFinderDrill` type added to `drill.ts` union; `drillStore` extended with `startPathFinder`, `clickPathStep`, `giveUp` actions. `GraphCanvas` routes node clicks to `clickPathStep` during active drill; pane click no-ops. `StudyNode` subscribes to drillStore and shows per-node visual state: source (blue glow), target (green glow), in-path (orange dashed outline). New `PathFinderOverlay` floating panel (canvas-relative, top-center, z-50): active phase shows breadcrumb + Undo / Submit / Give Up; graded phase shows verdict, path summary, mastery delta, Pick another / Done. Sidebar gains a "Drills" section with Path Finder button + 3s inline error on sparse graph. Edge traversal rules: `parent-child` and `related` bidirectional; `prerequisite` and `sequence` source→target only. Mastery on submit: +0.10 shortest path / +0.05 one hop over / 0 two hops over / −0.10 invalid or give up; applied to start + end nodes only. |
 
-**Next: Packet 6.5 — Memorizer Lens: Path Finder** (non-adjacent connected node pair; click intermediate nodes in correct sequence; reuses `drillStore` architecture).
+**Next: Packet 8 — Architect Lens** (Missing Link, Sorter, Cluster Title drills).
 
 ---
 
@@ -85,6 +86,13 @@ viewStore (Zustand)
   viewMode: 'canvas' | 'focus'
   sidebarCollapsed, inspectorCollapsed
   toggleViewMode, setViewMode, toggleSidebar, toggleInspector
+
+drillStore (Zustand)
+  phase: 'idle' | 'active' | 'graded'
+  currentDrill: Drill | null   ← discriminated union (ClozeDrill | PathFinderDrill)
+  result: DrillResult | null
+  actions (cloze): startCloze, setAnswer, submit, dismiss
+  actions (path-finder): startPathFinder, clickPathStep, giveUp
 ```
 
 ### Storage abstraction
@@ -336,6 +344,8 @@ The order below is locked. Packet 7 is intentionally late so the manual-build st
 ### Packet 6.5 — Memorizer Lens: Path Finder
 Non-adjacent connected node pair selected at random; user clicks intermediate nodes in correct order; parent-child and related edges traversable either direction, prerequisite and sequence direction-respecting. Reuses `drillStore` phase architecture; mastery on correct path.
 
+**Shipped.**
+
 ### Packet 8 — Architect Lens (three drills, one packet)
 - **Missing Link**: pick two semantically related but unconnected nodes (no current path; share tags or 2-hop neighbors). User draws an edge, picks a type, writes a one-sentence justification stored in `edge.label`.
 - **Sorter**: detach a parent's children, scramble at canvas bottom; user drags each back under correct parent. Validates against original parent-child edges.
@@ -422,7 +432,8 @@ StudyTool/                         ← repo root (C:\Users\olivf\StudyToolProjec
 │   ├── utils/
 │   │   ├── clozeSelection.ts
 │   │   ├── edgeStyles.ts
-│   │   └── masteryColor.ts
+│   │   ├── masteryColor.ts
+│   │   └── pathFinding.ts
 │   ├── App.tsx
 │   ├── main.tsx
 │   └── vite-env.d.ts

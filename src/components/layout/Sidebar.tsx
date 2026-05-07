@@ -4,6 +4,7 @@ import { useGraphStore } from "../../store/graphStore";
 import { GraphMetadata } from "../../types/graph";
 import { seedGraph } from "../../scripts/seedGraph";
 import { useViewStore } from "../../store/viewStore";
+import { useDrillStore } from '../../store/drillStore';
 import {
   listGraphs,
   createGraph,
@@ -16,8 +17,15 @@ export default function Sidebar(): JSX.Element {
   const [graphs, setGraphs] = useState<GraphMetadata[]>([]);
   const [loading, setLoading] = useState(true);
   const { currentGraphId, setCurrentGraph } = useGraphStore();
+  const [drillUnavailable, setDrillUnavailable] = useState(false);
   const [creatingGraph, setCreatingGraph] = useState(false);
   const [newGraphName, setNewGraphName] = useState('');
+
+  useEffect(() => {
+    if (!drillUnavailable) return;
+    const t = setTimeout(() => setDrillUnavailable(false), 3000);
+    return () => clearTimeout(t);
+  }, [drillUnavailable]);
 
   const fetchGraphs = async (): Promise<void> => {
     const result = await listGraphs(getUserId());
@@ -201,6 +209,50 @@ export default function Sidebar(): JSX.Element {
               + New Graph
             </button>
           )}
+
+          <div style={{ marginTop: 16, paddingTop: 12, borderTop: '1px solid var(--panel-border)' }}>
+            <div
+              style={{
+                fontSize: 11,
+                color: 'var(--text-muted)',
+                textTransform: 'uppercase',
+                letterSpacing: 1,
+                marginBottom: 8,
+              }}
+            >
+              Drills
+            </div>
+            <button
+              type="button"
+              onClick={() => {
+                const ok = useDrillStore.getState().startPathFinder();
+                if (ok) {
+                  useViewStore.getState().setViewMode('focus');
+                } else {
+                  setDrillUnavailable(true);
+                }
+              }}
+              style={{
+                width: '100%',
+                background: 'var(--accent)',
+                color: '#fff',
+                border: 'none',
+                borderRadius: 6,
+                padding: '8px',
+                cursor: 'pointer',
+                fontSize: 14,
+                fontWeight: 500,
+                fontFamily: 'inherit',
+              }}
+            >
+              Path Finder
+            </button>
+            {drillUnavailable && (
+              <div style={{ fontSize: 12, color: 'var(--text-muted)', marginTop: 6 }}>
+                Need at least one connected pair (≥2 hops apart) in this graph.
+              </div>
+            )}
+          </div>
 
           <p
             style={{

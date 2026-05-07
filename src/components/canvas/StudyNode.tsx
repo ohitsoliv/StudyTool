@@ -3,6 +3,7 @@ import { Handle, Position } from '@xyflow/react';
 import type { Node, NodeProps } from '@xyflow/react';
 import type { Layer } from '../../types/graph';
 import { masteryToColor } from '../../utils/masteryColor';
+import { useDrillStore } from '../../store/drillStore';
 
 export interface StudyNodeData extends Record<string, unknown> {
   title: string;
@@ -27,7 +28,7 @@ function truncate(str: string, max: number): string {
   return str.length > max ? str.slice(0, max) + '…' : str;
 }
 
-function StudyNode({ data, selected }: NodeProps<StudyNodeType>) {
+function StudyNode({ data, selected, id }: NodeProps<StudyNodeType>) {
   const { title, mastery, layerCount, layers, zoomLevel } = data;
   const borderColor = masteryToColor(mastery);
   const layer1 = layers?.[0];
@@ -36,14 +37,38 @@ function StudyNode({ data, selected }: NodeProps<StudyNodeType>) {
   const showLayer1 = zoomLevel >= 1.2 && layer1;
   const showLayer2 = zoomLevel >= 2.0 && layer2;
 
+  const currentDrill = useDrillStore((s) => s.currentDrill);
+  const phase = useDrillStore((s) => s.phase);
+
+  let drillState: 'source' | 'target' | 'in-path' | null = null;
+  if (phase === 'active' && currentDrill?.kind === 'path-finder') {
+    if (id === currentDrill.startNodeId) drillState = 'source';
+    else if (id === currentDrill.endNodeId) drillState = 'target';
+    else if (currentDrill.userPath.includes(id)) drillState = 'in-path';
+  }
+
+  let drillOutline: string | undefined;
+  let drillBoxShadow: string | undefined;
+  if (drillState === 'source') {
+    drillOutline = '2px solid #6b8afd';
+    drillBoxShadow = '0 0 0 4px rgba(107, 138, 253, 0.25)';
+  } else if (drillState === 'target') {
+    drillOutline = '2px solid #5a7a4a';
+    drillBoxShadow = '0 0 0 4px rgba(90, 122, 74, 0.25)';
+  } else if (drillState === 'in-path') {
+    drillOutline = '2px dashed #d4924a';
+  }
+
   const containerStyle: React.CSSProperties = {
     maxWidth: 280,
     padding: '12px 16px',
     borderRadius: 20,
     background: '#1e1e2e',
     borderLeft: `3px solid ${borderColor}`,
-    outline: selected ? '1px solid #6b8afd' : 'none',
-    boxShadow: selected
+    outline: drillOutline ?? (selected ? '1px solid #6b8afd' : 'none'),
+    boxShadow: drillBoxShadow
+      ? `${drillBoxShadow}, ${selected ? '0 0 0 3px rgba(107,138,253,0.2), ' : ''}inset 4px 0 6px -4px ${borderColor}`
+      : selected
       ? `0 0 0 3px rgba(107,138,253,0.2), inset 4px 0 6px -4px ${borderColor}`
       : `0 2px 8px rgba(0,0,0,0.4), inset 4px 0 6px -4px ${borderColor}`,
     cursor: 'grab',
