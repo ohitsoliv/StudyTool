@@ -1,68 +1,83 @@
-// src/components/canvas/GraphCanvas.tsx
 import { useCallback } from 'react';
 import {
   ReactFlow,
   Background,
   Controls,
-  Node,
-  Edge,
-  NodeMouseHandler,
-  OnNodeDrag,
-  ReactFlowProvider,
+  useStore,
+  type Node,
+  type Edge,
 } from '@xyflow/react';
 import '@xyflow/react/dist/style.css';
 import { useGraphStore } from '../../store/graphStore';
+import StudyNode from './StudyNode';
+import type { NodeDoc } from '../../types/graph';
 
-function GraphCanvasInner() {
-  const { nodes: nodeDocs, edges: edgeDocs, currentGraphId, selectNode, updateNode } = useGraphStore();
+const nodeTypes = { study: StudyNode };
 
-  const rfNodes: Node[] = nodeDocs.map(n => ({
-    id: n.id,
-    position: n.position,
-    data: { label: n.title },
-  }));
+// TODO: throttle zoom updates if re-rendering all nodes on zoom becomes a perf
+// issue at >50 nodes. Consider useThrottle(zoomLevel, 100) or deriving zoom
+// only at zoom threshold boundaries (1.2, 2.0) to minimize rerenders.
 
-  const rfEdges: Edge[] = edgeDocs.map(e => ({
-    id: e.id,
-    source: e.source,
-    target: e.target,
-    label: e.label,
-  }));
+function toFlowNode(doc: NodeDoc, zoomLevel: number): Node {
+  return {
+    id: doc.id,
+    type: 'study',
+    position: doc.position,
+    data: {
+      title: doc.title,
+      mastery: doc.mastery?.score ?? 0,
+      layerCount: doc.layers?.length ?? 0,
+      layers: doc.layers ?? [],
+      zoomLevel,
+    },
+  };
+}
 
-  const handleNodeClick: NodeMouseHandler = useCallback((_event, node) => {
-    selectNode(node.id);
-  }, [selectNode]);
-
-  const handleNodeDragStop: OnNodeDrag = useCallback((_event, node) => {
-    updateNode(node.id, { position: node.position });
-  }, [updateNode]);
-
-  if (!currentGraphId || nodeDocs.length === 0) {
-    return (
-      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: '100%', color: 'var(--text-muted, #888)' }}>
-        No graph selected. Open the sidebar to create or seed one.
-      </div>
-    );
-  }
-
-  return (
-    <ReactFlow
-      nodes={rfNodes}
-      edges={rfEdges}
-      onNodeClick={handleNodeClick}
-      onNodeDragStop={handleNodeDragStop}
-      fitView
-    >
-      <Background />
-      <Controls />
-    </ReactFlow>
-  );
+function toFlowEdge(edge: { id: string; source: string; target: string; type?: string }): Edge {
+  return { id: edge.id, source: edge.source, target: edge.target };
 }
 
 export default function GraphCanvas() {
+  const { nodes: nodeDocs, edges: edgeDocs, selectNode, updateNode } = useGraphStore();
+
+  // Subscribe to viewport zoom from React Flow internal store
+  const zoomLevel = useStore((s) => s.transform[2]);
+
+  const flowNodes = nodeDocs.map((n) => toFlowNode(n, zoomLevel));
+  const flowEdges = edgeDocs.map(toFlowEdge);
+
+  const onNodeDragStop = useCallback(
+    (_: React.MouseEvent, node: Node) => {
+      updateNode(node.id, { position: node.position });
+    },
+    [updateNode]
+  );
+
+  const onNodeClick = useCallback(
+    (_: React.MouseEvent, node: Node) => {
+      selectNode(node.id);
+    },
+    [selectNode]
+  );
+
+  const onPaneClick = useCallback(() => {
+    selectNode(null);
+  }, [selectNode]);
+
   return (
-    <ReactFlowProvider>
-      <GraphCanvasInner />
-    </ReactFlowProvider>
+    <div style={{ width: '100%', height: '100%' }}>
+      <ReactFlow
+        nodes={flowNodes}
+        edges={flowEdges}
+        nodeTypes={nodeTypes}
+        onNodeClick={onNodeClick}
+        onNodeDragStop={onNodeDragStop}
+        onPaneClick={onPaneClick}
+        fitView
+      >
+        <Background color="rgba(255,255,255,0.06)" gap={20} size={1} />
+        <Controls />
+      </ReactFlow>
+    </div>
   );
 }

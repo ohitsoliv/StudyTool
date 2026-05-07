@@ -1,7 +1,7 @@
 /* =============================================
    Nexus Study Engine — Global Dark Theme
    ============================================= */
-
+@import './mastery.css';
 :root {
   --bg: #0d0d0f;
   --text: #e8e8ea;
@@ -51,4 +51,39 @@ button {
 a {
   color: var(--accent);
   text-decoration: none;
+}
+
+/* Neutralize React Flow's default node wrapper so custom nodes control their own appearance */
+.react-flow__node {
+  background: transparent !important;
+  border: none !important;
+  padding: 0 !important;
+  border-radius: 0 !important;
+  box-shadow: none !important;
+  color: inherit !important;
+  width: auto !important;
+}
+
+.react-flow__node.selected {
+  box-shadow: none !important;
+}
+
+/* Edge text label styling */
+.react-flow__edge-text {
+  fill: #c0c8d8;
+  font-size: 11px;
+}
+.react-flow__edge-textbg {
+  fill: #16161a;
+  fill-opacity: 0.85;
+}
+
+/* Edge path color so edges show on dark bg */
+.react-flow__edge-path {
+  stroke: rgba(180, 190, 210, 0.35);
+  stroke-width: 1.5;
+}
+.react-flow__edge.selected .react-flow__edge-path {
+  stroke: #6b8afd;
+  stroke-width: 2;
 }
