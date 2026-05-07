@@ -193,3 +193,30 @@ a {
   stroke-width: 2.5 !important;
   filter: drop-shadow(0 0 4px rgba(107, 138, 253, 0.5));
 }
+
+/* === Packet 5.1: mastery progress bar === */
+.mastery-bar {
+  margin: 12px 0;
+  user-select: none;
+}
+.mastery-bar__label {
+  display: flex;
+  justify-content: space-between;
+  font-size: 11px;
+  color: #9a9a9f;
+  margin-bottom: 4px;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+.mastery-bar__track {
+  width: 100%;
+  height: 6px;
+  background: #0d0d0f;
+  border: 1px solid #2a2a2f;
+  border-radius: 3px;
+  overflow: hidden;
+}
+.mastery-bar__fill {
+  height: 100%;
+  transition: width 200ms ease, background 200ms ease;
+}

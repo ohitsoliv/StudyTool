@@ -1,8 +1,10 @@
 import { useEffect, useRef, useState } from "react";
 import { PanelRight } from "lucide-react";
 import Editor from "@monaco-editor/react";
+import { Timestamp } from "firebase/firestore";
 import { useViewStore } from "../../store/viewStore";
 import { useGraphStore } from "../../store/graphStore";
+import { masteryToColor } from "../../utils/masteryColor";
 import type { Layer, EdgeDoc, EdgeType } from "../../types/graph";
 
 interface LayerCardProps {
@@ -324,6 +326,28 @@ export default function Inspector(): JSX.Element {
                 />
               </section>
 
+              {(() => {
+                const score = node.mastery?.score ?? 0;
+                const pct = Math.round(score * 100);
+                return (
+                  <div className="mastery-bar">
+                    <div className="mastery-bar__label">
+                      <span>Mastery</span>
+                      <span>{pct}%</span>
+                    </div>
+                    <div className="mastery-bar__track">
+                      <div
+                        className="mastery-bar__fill"
+                        style={{
+                          width: `${pct}%`,
+                          background: masteryToColor(score),
+                        }}
+                      />
+                    </div>
+                  </div>
+                );
+              })()}
+
               <section style={{ display: "flex", flexDirection: "column", gap: 10 }}>
                 <p style={{ fontSize: 12, color: "var(--text-muted)" }}>Layers</p>
                 {node.layers.map((layer, index) => (
@@ -334,6 +358,23 @@ export default function Inspector(): JSX.Element {
                     onPatch={(patch) => patchLayer(index, patch)}
                   />
                 ))}
+                <button
+                  className="icon-btn"
+                  style={{ marginTop: 8 }}
+                  onClick={() => {
+                    const existingDepths = node.layers.map((l) => l.depth);
+                    const newDepth = existingDepths.length === 0 ? 1 : Math.max(...existingDepths) + 1;
+                    const newLayer: Layer = {
+                      depth: newDepth,
+                      content: "",
+                      contentType: "text",
+                      createdAt: Timestamp.now(),
+                    };
+                    void updateNode(node.id, { layers: [...node.layers, newLayer] });
+                  }}
+                >
+                  + Add Layer
+                </button>
               </section>
             </>
           )}
