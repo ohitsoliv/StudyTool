@@ -94,6 +94,7 @@ function GraphCanvasInner() {
   const onConnect = useCallback(
     async (conn: Connection) => {
       if (!conn.source || !conn.target) return;
+      if (conn.source === conn.target) return;
       const id = await createEdge({
         source: conn.source,
         target: conn.target,
