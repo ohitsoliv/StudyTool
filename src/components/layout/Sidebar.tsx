@@ -1,5 +1,6 @@
-import { useEffect, useState } from "react";
-import { PanelLeft } from "lucide-react";
+﻿import { useEffect, useState } from "react";
+import { useUserPrefsStore } from "../../store/userPrefsStore";
+import { PanelLeft, Settings } from "lucide-react";
 import { useGraphStore } from "../../store/graphStore";
 import { GraphMetadata } from "../../types/graph";
 import { seedGraph, seedLinearAlgebra } from "../../scripts/seedGraph";
@@ -15,6 +16,7 @@ import {
 
 export default function Sidebar(): JSX.Element {
   const { sidebarCollapsed, toggleSidebar } = useViewStore();
+  const hideSidebarDrills = useUserPrefsStore((s) => s.hideSidebarDrills);
   const [graphs, setGraphs] = useState<GraphMetadata[]>([]);
   const [loading, setLoading] = useState(true);
   const { currentGraphId, setCurrentGraph } = useGraphStore();
@@ -125,19 +127,27 @@ export default function Sidebar(): JSX.Element {
         overflow: "hidden",
       }}
     >
-      <button
-        onClick={toggleSidebar}
-        title="Toggle Sidebar"
-        style={{
-          padding: "12px",
-          color: "var(--text-muted)",
-          display: "flex",
-          alignItems: "center",
-          justifyContent: sidebarCollapsed ? "center" : "flex-end",
-        }}
-      >
-        <PanelLeft size={18} />
-      </button>
+      <div style={{ display: "flex", alignItems: "center", justifyContent: sidebarCollapsed ? "center" : "space-between", padding: "4px" }}>
+        <button
+          onClick={toggleSidebar}
+          title="Toggle Sidebar"
+          style={{ padding: "8px", color: "var(--text-muted)" }}
+        >
+          <PanelLeft size={18} />
+        </button>
+        {!sidebarCollapsed && (
+          <button
+            type="button"
+            onClick={() => useUserPrefsStore.getState().openSettings()}
+            title="Settings"
+            style={{ padding: "8px", color: "var(--text-muted)", background: "transparent", border: "none", cursor: "pointer", display: "flex", alignItems: "center" }}
+            onMouseEnter={(e) => { (e.currentTarget as HTMLButtonElement).style.color = "var(--text)"; }}
+            onMouseLeave={(e) => { (e.currentTarget as HTMLButtonElement).style.color = "var(--text-muted)"; }}
+          >
+            <Settings size={15} />
+          </button>
+        )}
+      </div>
 
       {!sidebarCollapsed && (
         <nav
@@ -255,6 +265,7 @@ export default function Sidebar(): JSX.Element {
             </button>
           )}
 
+          {!hideSidebarDrills && (
           <div style={{ marginTop: 16, paddingTop: 12, borderTop: '1px solid var(--panel-border)' }}>
             <div
               style={{
@@ -457,6 +468,7 @@ export default function Sidebar(): JSX.Element {
               </div>
             )}
           </div>
+          )}
 
           <p
             style={{

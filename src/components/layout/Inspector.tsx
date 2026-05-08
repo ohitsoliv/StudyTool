@@ -262,33 +262,37 @@ function EdgeInspector({ edge }: { edge: EdgeDoc }) {
 
   return (
     <div style={{ padding: 16, color: '#e8e8ea', fontSize: 13 }}>
-      <div style={{ fontSize: 11, textTransform: 'uppercase', letterSpacing: 0.5, color: '#9a9a9f', marginBottom: 12 }}>
-        Edge
-      </div>
-      <div style={{ marginBottom: 14 }}>
-        <div style={{ fontSize: 11, color: '#9a9a9f', marginBottom: 4 }}>Source</div>
-        <button className="link-btn" onClick={() => sourceNode && selectNode(sourceNode.id)}>
-          {sourceNode?.title ?? '(missing)'}
-        </button>
-      </div>
-      <div style={{ marginBottom: 14 }}>
-        <div style={{ fontSize: 11, color: '#9a9a9f', marginBottom: 4 }}>Target</div>
-        <button className="link-btn" onClick={() => targetNode && selectNode(targetNode.id)}>
-          {targetNode?.title ?? '(missing)'}
-        </button>
-      </div>
-      <div style={{ marginBottom: 14 }}>
-        <div style={{ fontSize: 11, color: '#9a9a9f', marginBottom: 4 }}>Type</div>
+      {/* Header: type pill + delete button */}
+      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 12 }}>
         <select
           className="inspector-select"
           value={edge.type}
           onChange={(e) => updateEdge(edge.id, { type: e.target.value as EdgeType })}
+          style={{ fontSize: 11, padding: '2px 6px', borderRadius: 12 }}
         >
           {EDGE_TYPES.map((t) => (
             <option key={t} value={t}>{t}</option>
           ))}
         </select>
+        <button className="icon-btn icon-btn--destructive" onClick={() => deleteEdge(edge.id)} title="Delete Edge">
+          &#x1F5D1;
+        </button>
       </div>
+      {/* Source → Target row */}
+      <div style={{ marginBottom: 8, display: 'flex', alignItems: 'center', gap: 6, flexWrap: 'wrap' }}>
+        <button className="link-btn" onClick={() => sourceNode && selectNode(sourceNode.id)}>
+          {sourceNode?.title ?? '(missing)'}
+        </button>
+        <span style={{ color: 'var(--text-muted)' }}>→</span>
+        <button className="link-btn" onClick={() => targetNode && selectNode(targetNode.id)}>
+          {targetNode?.title ?? '(missing)'}
+        </button>
+      </div>
+      {/* Created timestamp */}
+      <div style={{ fontSize: 11, color: 'var(--text-muted)', marginBottom: 14 }}>
+        Created {edge.createdAt?.toDate().toLocaleString() ?? '—'}
+      </div>
+      {/* Label/nickname */}
       <div style={{ marginBottom: 18 }}>
         <div style={{ fontSize: 11, color: '#9a9a9f', marginBottom: 4 }}>Label</div>
         <input
@@ -299,9 +303,6 @@ function EdgeInspector({ edge }: { edge: EdgeDoc }) {
           onChange={(e) => updateEdge(edge.id, { label: e.target.value })}
         />
       </div>
-      <button className="icon-btn icon-btn--destructive" onClick={() => deleteEdge(edge.id)}>
-        Delete Edge
-      </button>
     </div>
   );
 }

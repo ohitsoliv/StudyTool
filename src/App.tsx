@@ -1,22 +1,20 @@
-import { useEffect } from "react";
 import AppShell from "./components/layout/AppShell";
-import { useViewStore } from "./store/viewStore";
+import SettingsModal from "./components/layout/SettingsModal";
+import ShortcutLegendModal from "./components/layout/ShortcutLegendModal";
+import { useShortcuts } from "./hooks/useShortcuts";
+import { useApplyMasteryCssVars } from "./hooks/useApplyMasteryCssVars";
 
 function App(): JSX.Element {
-  const toggleViewMode = useViewStore((s) => s.toggleViewMode);
+  useShortcuts();
+  useApplyMasteryCssVars();
 
-  useEffect(() => {
-    const handleKey = (e: KeyboardEvent): void => {
-      if ((e.metaKey || e.ctrlKey) && e.key === "e") {
-        e.preventDefault();
-        toggleViewMode();
-      }
-    };
-    window.addEventListener("keydown", handleKey);
-    return () => window.removeEventListener("keydown", handleKey);
-  }, [toggleViewMode]);
-
-  return <AppShell />;
+  return (
+    <>
+      <AppShell />
+      <SettingsModal />
+      <ShortcutLegendModal />
+    </>
+  );
 }
 
 export default App;

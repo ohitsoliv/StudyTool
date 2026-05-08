@@ -1,7 +1,6 @@
 /* =============================================
    Nexus Study Engine — Global Dark Theme
    ============================================= */
-@import './mastery.css';
 :root {
   --bg: #0d0d0f;
   --text: #e8e8ea;
