@@ -2,7 +2,7 @@
 
 # Nexus Study Engine
 
-**Last updated: 2026-05-07 (Packet 9)**
+**Last updated: 2026-05-07 (Hotfix 9.z)**
 
 ---
 
@@ -29,8 +29,10 @@ Nexus Study Engine is a spatial knowledge graph for solo deep-learning. The user
 | Packet 8a | **Architect Lens — Missing Link + Cluster Title drills.** New utils: `missingLink.ts` (eligible pair = no direct or indirect path, shares tag or 2-hop neighbor under bidirectional traversal), `clusterTitleSelection.ts` (parent with ≥2 `parent-child` children), `stringMatch.ts` (graduated match: exact 1.0 / Levenshtein ≤2 → 0.9 / substring → 0.7 / Jaccard ≥50% → 0.5). New drill types `MissingLinkDrill` + `ClusterTitleDrill` added to `drill.ts` union. `drillStore` extended: `startMissingLink`, `setMissingLinkType`, `setMissingLinkJustification`, `submitMissingLink`, `giveUpMissingLink`, `startClusterTitle`, `setClusterTitleInput`, `submitClusterTitle`, `giveUpClusterTitle`. Missing Link mastery: +0.10 to both endpoints on submit, −0.10 on give-up; edge written via `graphStore.createEdge`. Cluster Title mastery: score 1.0 → +0.10, 0.9 → +0.05, 0.7 → 0, ≤0.5 → −0.10 on parent node only. `StudyNode` gains per-kind visual states: missing-link endpoints get accent outline + glow + `?` badge; cluster-title parent gets dashed accent outline + `?` title mask; children get orange outline. New `MissingLinkOverlay` and `ClusterTitleOverlay` floating panels (canvas-relative, top-center, z-50). `GraphCanvas` click routing extended: non-path-finder active drills are no-ops on node and pane click. Canvas edit lockout (edge creation + Delete/Backspace) already present from prior sub-packet. Sidebar gains Missing Link and Cluster Title buttons with per-button 3s inline errors. |
 | Packet 8b | **Architect Lens: Pre-work fixes + Sorter drill.** Pre-work: renamed `clozeSelection.ts` → `cloze.ts` and `clusterTitleSelection.ts` → `clusterTitle.ts`; verified `accessCount`/`lastAccessedAt` increments on all 4 drill starts; phase-gated Cluster Title title mask and children outline to `active` only; confirmed Missing Link justification floor (≥10 chars) and `edge.label` population; added color swatch previews to `MissingLinkOverlay` edge-type buttons; changed children outline from `#d4924a` → `rgba(107,138,253,0.45)`. Sorter drill: new `sorter.ts` util (`selectSorterCandidate` — 2–3 parents each with ≥2 `parent-child` children, 4–7 children total, no shared children); new `SorterDrill` type in `drill.ts`; `drillStore` extended with `startSorter` (saves originalPositions, scrambles children to bottom of canvas), `assignChild` (drag proximity ≤200px → parent, else null), `submitSorter` (score = correct/total, mastery delta via formula, applied to all parents + children), `giveUpSorter` (−0.10 to all), `dismiss` restores original positions for sorter. `GraphCanvas`: filters out parent-child edges between sorter parents↔children during active drill; `onNodeDragStop` triggers proximity detection and calls `assignChild`. `StudyNode`: parent gets accent outline + glow during active; child gets dashed-muted when unplaced / solid-accent when placed; graded shows ✓/✗ badge per child. New `SorterOverlay.tsx`: active phase shows placed progress + Submit (disabled until all placed) + Give Up; graded phase shows score verdict with color + mastery delta + note + Pick another / Done. Sidebar gains Sorter button + 3s inline error. **Architect Lens complete.** |
 
-| Packet 9 | **Practitioner Lens: Scenario Builder.** … (see above) |
+| Packet 9 | **Practitioner Lens: Scenario Builder.** Added `ScenarioBuilderDrill` (`kind: 'scenario-builder'`, `problemStatement`, `pipeline`, `builderPhase`) and dual-view workflow: authoring → building → graded. `drillStore` actions: `startScenarioBuilder`, `setProblemStatement`, `commitProblemStatement`, `addToPipeline`, `removeFromPipeline`, `reorderPipeline`, `submitScenarioBuilder`, `gradeScenarioBuilder`; dismissal resets view mode to canvas. `StudyNode` shows pipeline ordering badge; `FocusWorkspace` renders author/build/grade states; Sidebar has Scenario Builder launcher with minimum-node guard. |
 | Hotfix 9.x | Sidebar `<nav>` given `flex: 1`, `minHeight: 0`, `overflowY: auto` so it scrolls when drill buttons + graph list exceed panel height. |
+| Hotfix 9.y | Runtime check confirmed Scenario Builder action lookup issue came from stale runtime state; local hard-clean + fresh dev rebuild procedure established (`dist` + `node_modules/.vite` cleanup, hard refresh). |
+| Hotfix 9.z | Canonical disk sources reconciled with expected Packet 9 state: `src/store/drillStore.ts` now includes all 8 Scenario Builder actions on the actual returned Zustand object, and `src/types/drill.ts` includes `ScenarioBuilderDrill` + scenario result fields (`verdict`, `problemStatement`, `pipeline`, `nodesAffected`). |
 
 **Next: Packet 10 — Practitioner Lens: AI Ingestion (BYO-AI).**
 
@@ -94,7 +96,7 @@ viewStore (Zustand)
 
 drillStore (Zustand)
   phase: 'idle' | 'active' | 'graded'
-  currentDrill: Drill | null   ← discriminated union (ClozeDrill | PathFinderDrill | MissingLinkDrill | ClusterTitleDrill)
+  currentDrill: Drill | null   ← discriminated union (ClozeDrill | PathFinderDrill | MissingLinkDrill | ClusterTitleDrill | SorterDrill | ScenarioBuilderDrill)
   result: DrillResult | null
   actions (cloze): startCloze, setAnswer, submit, dismiss
   actions (path-finder): startPathFinder, clickPathStep, giveUp

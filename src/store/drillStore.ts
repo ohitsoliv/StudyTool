@@ -1,4 +1,4 @@
-﻿import { create } from 'zustand';
+import { create } from 'zustand';
 import { Timestamp } from 'firebase/firestore';
 import type {
   Drill,
@@ -7,6 +7,7 @@ import type {
   MissingLinkDrill,
   ClusterTitleDrill,
   SorterDrill,
+  ScenarioBuilderDrill,
   DrillResult,
 } from '../types/drill';
 import type { EdgeDoc, EdgeType, NodeDoc } from '../types/graph';
@@ -17,6 +18,7 @@ import { selectClusterTitleParent } from '../utils/clusterTitle';
 import { selectSorterCandidate } from '../utils/sorter';
 import { matchScore } from '../utils/stringMatch';
 import { useGraphStore } from './graphStore';
+import { useViewStore } from './viewStore';
 
 type DrillPhase = 'idle' | 'active' | 'graded';
 
@@ -44,6 +46,14 @@ interface DrillStoreState {
   assignChild: (childId: string, parentId: string | null) => void;
   submitSorter: () => Promise<void>;
   giveUpSorter: () => Promise<void>;
+  startScenarioBuilder: () => void;
+  setProblemStatement: (text: string) => void;
+  commitProblemStatement: () => void;
+  addToPipeline: (nodeId: string) => void;
+  removeFromPipeline: (index: number) => void;
+  reorderPipeline: (fromIndex: number, toIndex: number) => void;
+  submitScenarioBuilder: () => void;
+  gradeScenarioBuilder: (verdict: 'correct' | 'partial' | 'wrong') => Promise<void>;
 }
 
 const MIN_TEXT_LEN = 30;
@@ -188,6 +198,9 @@ export const useDrillStore = create<DrillStoreState>((set, get) => ({
     const drill = get().currentDrill;
     if (drill?.kind === 'sorter') {
       void restorePositions(drill.originalPositions);
+    }
+    if (drill?.kind === 'scenario-builder') {
+      useViewStore.getState().setViewMode('canvas');
     }
     set({ currentDrill: null, result: null, phase: 'idle' });
   },
@@ -405,4 +418,101 @@ export const useDrillStore = create<DrillStoreState>((set, get) => ({
     const gradedDrill: SorterDrill = { ...drill, score: 0, gaveUp: true };
     set({ currentDrill: gradedDrill, result: { drill: gradedDrill, score: 0, masteryDelta: -0.10, correct: 0, total: drill.childIds.length }, phase: 'graded' });
   },
+
+  startScenarioBuilder: () => {
+    const { nodes } = useGraphStore.getState();
+    if (nodes.length < 3) return;
+    const drill: ScenarioBuilderDrill = {
+      kind: 'scenario-builder',
+      problemStatement: '',
+      pipeline: [],
+      builderPhase: 'authoring',
+    };
+    set({ currentDrill: drill, result: null, phase: 'active' });
+    useViewStore.getState().setViewMode('dual');
+  },
+
+  setProblemStatement: (text) => {
+    const drill = get().currentDrill;
+    if (!drill || drill.kind !== 'scenario-builder' || drill.builderPhase !== 'authoring') return;
+    set({ currentDrill: { ...drill, problemStatement: text } });
+  },
+
+  commitProblemStatement: () => {
+    const drill = get().currentDrill;
+    if (!drill || drill.kind !== 'scenario-builder' || drill.builderPhase !== 'authoring') return;
+    if (drill.problemStatement.trim().length < 10) return;
+    set({ currentDrill: { ...drill, builderPhase: 'building' } });
+  },
+
+  addToPipeline: (nodeId) => {
+    const drill = get().currentDrill;
+    if (!drill || drill.kind !== 'scenario-builder' || drill.builderPhase !== 'building') return;
+    if (drill.pipeline.includes(nodeId)) return;
+    set({ currentDrill: { ...drill, pipeline: [...drill.pipeline, nodeId] } });
+
+    const gs = useGraphStore.getState();
+    const node = gs.nodes.find((n) => n.id === nodeId);
+    if (node) {
+      void gs.updateNode(nodeId, {
+        accessCount: (node.accessCount ?? 0) + 1,
+        lastAccessedAt: Timestamp.now(),
+      });
+    }
+  },
+
+  removeFromPipeline: (index) => {
+    const drill = get().currentDrill;
+    if (!drill || drill.kind !== 'scenario-builder' || drill.builderPhase !== 'building') return;
+    if (index < 0 || index >= drill.pipeline.length) return;
+    const next = drill.pipeline.filter((_, i) => i !== index);
+    set({ currentDrill: { ...drill, pipeline: next } });
+  },
+
+  reorderPipeline: (fromIndex, toIndex) => {
+    const drill = get().currentDrill;
+    if (!drill || drill.kind !== 'scenario-builder' || drill.builderPhase !== 'building') return;
+    const len = drill.pipeline.length;
+    if (fromIndex < 0 || fromIndex >= len || toIndex < 0 || toIndex >= len) return;
+    const next = [...drill.pipeline];
+    const [moved] = next.splice(fromIndex, 1);
+    next.splice(toIndex, 0, moved);
+    set({ currentDrill: { ...drill, pipeline: next } });
+  },
+
+  submitScenarioBuilder: () => {
+    const drill = get().currentDrill;
+    if (!drill || drill.kind !== 'scenario-builder' || drill.builderPhase !== 'building') return;
+    if (drill.pipeline.length < 1) return;
+    set({
+      phase: 'graded',
+      result: {
+        drill,
+        score: 0,
+        masteryDelta: 0,
+        problemStatement: drill.problemStatement,
+        pipeline: [...drill.pipeline],
+        nodesAffected: [],
+      },
+    });
+  },
+
+  gradeScenarioBuilder: async (verdict) => {
+    const { result } = get();
+    if (!result || result.drill.kind !== 'scenario-builder' || result.verdict !== undefined) return;
+
+    const masteryDelta = verdict === 'correct' ? 0.10 : verdict === 'partial' ? 0.05 : -0.10;
+    const nodeIds = result.pipeline ?? [];
+    await applyMasteryDelta(nodeIds, masteryDelta);
+
+    set({
+      result: {
+        ...result,
+        verdict,
+        masteryDelta,
+        nodesAffected: [...nodeIds],
+      },
+    });
+  },
 }));
+

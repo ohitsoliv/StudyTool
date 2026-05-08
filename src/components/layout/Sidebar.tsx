@@ -12,6 +12,7 @@ import {
   STORAGE_MODE,
   resetAll,
 } from '../../services/storage';
+
 export default function Sidebar(): JSX.Element {
   const { sidebarCollapsed, toggleSidebar } = useViewStore();
   const [graphs, setGraphs] = useState<GraphMetadata[]>([]);
