@@ -16,6 +16,7 @@ import '@xyflow/react/dist/style.css';
 import { Timestamp } from 'firebase/firestore';
 import { useGraphStore } from '../../store/graphStore';
 import { useDrillStore } from '../../store/drillStore';
+import { useSessionStore } from '../../store/sessionStore';
 import StudyNode from './StudyNode';
 import { CanvasContextMenu, type MenuItem } from './CanvasContextMenu';
 import { applyEdgeVisual } from '../../utils/edgeStyles';
@@ -250,6 +251,11 @@ function GraphCanvasInner() {
       const debuggerEligibility = canDebuggerSystem(menuNodes);
 
       return [
+        {
+          label: 'Start a session...',
+          onClick: () => useSessionStore.getState().openModal(),
+        },
+        { separator: true },
         { sectionLabel: 'START A DRILL' },
         {
           label: 'Path Finder',

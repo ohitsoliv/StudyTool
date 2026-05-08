@@ -1,4 +1,5 @@
 ﻿import type { ClozeBlank } from '../types/drill';
+import type { NodeDoc } from '../types/graph';
 
 const STOP_WORDS = new Set<string>([
   'this', 'that', 'with', 'from', 'have', 'will', 'they',
@@ -71,4 +72,26 @@ export function selectBlanks(
   }
 
   return { display, blanks };
+}
+
+export function pickRandomEligibleNode(
+  nodes: NodeDoc[],
+  opts?: { poolNodeIds?: Set<string> }
+): NodeDoc | null {
+  const inPool = opts?.poolNodeIds
+    ? nodes.filter((node) => opts.poolNodeIds?.has(node.id))
+    : nodes;
+
+  const eligible = inPool.filter((node) =>
+    !node.archived &&
+    node.layers.some(
+      (layer) =>
+        layer.contentType === 'text' &&
+        typeof layer.content === 'string' &&
+        layer.content.trim().length >= 30
+    )
+  );
+
+  if (eligible.length === 0) return null;
+  return eligible[Math.floor(Math.random() * eligible.length)];
 }

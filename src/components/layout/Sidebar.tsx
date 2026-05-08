@@ -3,9 +3,10 @@ import { useUserPrefsStore } from "../../store/userPrefsStore";
 import { PanelLeft, Settings } from "lucide-react";
 import { useGraphStore } from "../../store/graphStore";
 import { GraphMetadata } from "../../types/graph";
-import { seedGraph, seedLinearAlgebra } from "../../scripts/seedGraph";
+import { seedGraph, seedLinearAlgebra, seedLgbtqIdentityVocabulary } from "../../scripts/seedGraph";
 import { useViewStore } from "../../store/viewStore";
 import { useDrillStore } from '../../store/drillStore';
+import { useSessionStore } from '../../store/sessionStore';
 import {
   listGraphs,
   createGraph,
@@ -104,6 +105,12 @@ export default function Sidebar(): JSX.Element {
   const handleSeedLA = async (): Promise<void> => {
     if (!confirm('Seed the database with "Linear Algebra Sandbox"?')) return;
     await seedLinearAlgebra();
+    await fetchGraphs();
+  };
+
+  const handleSeedLgbtq = async (): Promise<void> => {
+    if (!confirm('Seed the database with "LGBTQ+ Identity Vocabulary"?')) return;
+    await seedLgbtqIdentityVocabulary();
     await fetchGraphs();
   };
 
@@ -267,6 +274,25 @@ export default function Sidebar(): JSX.Element {
 
           {!hideSidebarDrills && (
           <div style={{ marginTop: 16, paddingTop: 12, borderTop: '1px solid var(--panel-border)' }}>
+            <button
+              type="button"
+              onClick={() => useSessionStore.getState().openModal()}
+              style={{
+                width: '100%',
+                background: 'var(--accent)',
+                color: '#fff',
+                border: 'none',
+                borderRadius: 6,
+                padding: '8px',
+                cursor: 'pointer',
+                fontSize: 14,
+                fontWeight: 500,
+                fontFamily: 'inherit',
+                marginBottom: 8,
+              }}
+            >
+              Start a session
+            </button>
             <div
               style={{
                 fontSize: 11,
@@ -507,6 +533,20 @@ export default function Sidebar(): JSX.Element {
             }}
           >
             Seed Linear Algebra
+          </button>
+
+          <button
+            onClick={handleSeedLgbtq}
+            style={{
+              cursor: "pointer",
+              border: "1px solid var(--panel-border)",
+              borderRadius: 6,
+              padding: "0.45rem 0.6rem",
+              textAlign: "left",
+              marginTop: 6,
+            }}
+          >
+            Seed LGBTQ+ Vocabulary
           </button>
 
           <div style={{ marginTop: 12, fontSize: 11, color: 'var(--text-muted, #888)' }}>

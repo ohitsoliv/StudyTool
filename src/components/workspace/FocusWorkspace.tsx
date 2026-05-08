@@ -4,7 +4,9 @@ import Editor from '@monaco-editor/react';
 import { useDrillStore } from '../../store/drillStore';
 import { useGraphStore } from '../../store/graphStore';
 import { useViewStore } from '../../store/viewStore';
+import { useSessionStore } from '../../store/sessionStore';
 import FocusPicker from './FocusPicker';
+import SessionBanner from './SessionBanner';
 import type { NodeDoc } from '../../types/graph';
 
 const MIN_TEXT_LEN = 30;
@@ -206,6 +208,9 @@ export default function FocusWorkspace() {
   const setDebuggerInput = useDrillStore((s) => s.setDebuggerInput);
   const submitDebugger = useDrillStore((s) => s.submitDebugger);
   const giveUpDebugger = useDrillStore((s) => s.giveUpDebugger);
+  const session = useSessionStore((s) => s.session);
+  const advanceSession = useSessionStore((s) => s.advanceSession);
+  const endSession = useSessionStore((s) => s.endSession);
 
   const nodes = useGraphStore((s) => s.nodes);
   const edges = useGraphStore((s) => s.edges);
@@ -304,6 +309,43 @@ export default function FocusWorkspace() {
   const titleById = (id: string): string =>
     nodes.find((n) => n.id === id)?.title ?? '(missing)';
 
+  const renderGradedActions = (pickAnotherLabel: string, onPickAnother: () => void) => {
+    if (!session) {
+      return (
+        <div style={{ display: 'flex', gap: 12 }}>
+          <button onClick={onPickAnother} style={primaryBtnStyle}>
+            {pickAnotherLabel}
+          </button>
+          <button onClick={handleExit} style={secondaryBtnStyle}>
+            Done
+          </button>
+        </div>
+      );
+    }
+
+    if (session.boundReached) {
+      return (
+        <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 10 }}>
+          <div style={{ fontSize: 18, fontWeight: 600, color: 'var(--text)' }}>Session complete</div>
+          <button onClick={endSession} style={secondaryBtnStyle}>
+            Done
+          </button>
+        </div>
+      );
+    }
+
+    return (
+      <div style={{ display: 'flex', gap: 12 }}>
+        <button onClick={advanceSession} style={primaryBtnStyle}>
+          Next drill
+        </button>
+        <button onClick={endSession} style={secondaryBtnStyle}>
+          End session
+        </button>
+      </div>
+    );
+  };
+
   // Header label
   const clozeNode = activeCloze
     ? nodes.find((n) => n.id === activeCloze.nodeId) ?? null
@@ -331,6 +373,7 @@ export default function FocusWorkspace() {
       </div>
 
       <div style={bodyStyle}>
+        {session && <SessionBanner />}
         {phase === 'idle' && !currentDrill && <FocusPicker />}
 
         {/* ============ ACTIVE: CLOZE ============ */}
@@ -597,14 +640,7 @@ export default function FocusWorkspace() {
               })}
             </div>
 
-            <div style={{ display: 'flex', gap: 12 }}>
-              <button onClick={handleStudyAnother} style={primaryBtnStyle}>
-                Study Another
-              </button>
-              <button onClick={handleExit} style={secondaryBtnStyle}>
-                Done
-              </button>
-            </div>
+            {renderGradedActions('Study Another', handleStudyAnother)}
           </>
         )}
 
@@ -672,13 +708,8 @@ export default function FocusWorkspace() {
                   When !reachedEnd, end is intentionally omitted per spec. */}
             </div>
 
-            <div style={{ display: 'flex', gap: 12, marginTop: 24 }}>
-              <button onClick={handleTryAnother} style={primaryBtnStyle}>
-                Try Another
-              </button>
-              <button onClick={handleExit} style={secondaryBtnStyle}>
-                Done
-              </button>
+            <div style={{ marginTop: 24 }}>
+              {renderGradedActions('Try Another', handleTryAnother)}
             </div>
           </>
         )}
@@ -877,10 +908,7 @@ export default function FocusWorkspace() {
                 {(result.nodesAffected ?? []).length} node{(result.nodesAffected ?? []).length !== 1 ? 's' : ''} · mastery{' '}
                 {(result.masteryDelta ?? 0) > 0 ? `+${result.masteryDelta?.toFixed(2)}` : result.masteryDelta?.toFixed(2)}
               </div>
-              <div style={{ display: 'flex', gap: 10 }}>
-                <button onClick={() => startScenarioBuilder()} style={primaryBtnStyle}>Pick another</button>
-                <button onClick={dismiss} style={secondaryBtnStyle}>Done</button>
-              </div>
+              {renderGradedActions('Pick another', () => startScenarioBuilder())}
             </div>
           </>
         )}
@@ -1030,10 +1058,7 @@ export default function FocusWorkspace() {
               <div style={{ fontSize: 15, color: (result.masteryDelta ?? 0) >= 0 ? COLOR_OK : COLOR_BAD, marginBottom: 24 }}>
                 Mastery: {deltaSign}{deltaAbs}
               </div>
-              <div style={{ display: 'flex', gap: 10 }}>
-                <button onClick={() => startDebugger()} style={primaryBtnStyle}>Pick another</button>
-                <button onClick={dismiss} style={secondaryBtnStyle}>Done</button>
-              </div>
+              {renderGradedActions('Pick another', () => startDebugger())}
             </div>
           );
         })()}

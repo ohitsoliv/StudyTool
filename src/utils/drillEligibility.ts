@@ -1,4 +1,8 @@
 import type { NodeDoc, EdgeDoc } from '../types/graph';
+import { findEligiblePair } from './pathFinding';
+import { selectClusterTitleParent } from './clusterTitle';
+import { selectSorterCandidate } from './sorter';
+import { selectMissingLinkPair } from './missingLink';
 
 export interface Eligibility {
   eligible: boolean;
@@ -7,7 +11,19 @@ export interface Eligibility {
 
 const TEXT_LAYER_MIN = 30;
 
-export function canCloze(node: NodeDoc): Eligibility {
+interface EligibilityOptions {
+  poolNodeIds?: Set<string>;
+}
+
+function filterNodesByPool(nodes: NodeDoc[], opts?: EligibilityOptions): NodeDoc[] {
+  if (!opts?.poolNodeIds) return nodes;
+  return nodes.filter((node) => opts.poolNodeIds?.has(node.id));
+}
+
+export function canCloze(node: NodeDoc, opts?: EligibilityOptions): Eligibility {
+  if (opts?.poolNodeIds && !opts.poolNodeIds.has(node.id)) {
+    return { eligible: false, reason: 'Needs a text layer >= 30 characters' };
+  }
   const has = node.layers.some(
     (l) => l.contentType === 'text' && l.content.trim().length >= TEXT_LAYER_MIN
   );
@@ -16,7 +32,10 @@ export function canCloze(node: NodeDoc): Eligibility {
     : { eligible: false, reason: 'Needs a text layer >= 30 characters' };
 }
 
-export function canDebuggerNode(node: NodeDoc): Eligibility {
+export function canDebuggerNode(node: NodeDoc, opts?: EligibilityOptions): Eligibility {
+  if (opts?.poolNodeIds && !opts.poolNodeIds.has(node.id)) {
+    return { eligible: false, reason: 'Needs a code/math layer with a broken version' };
+  }
   const has = node.layers.some(
     (l) =>
       (l.contentType === 'code' || l.contentType === 'math') &&
@@ -27,20 +46,55 @@ export function canDebuggerNode(node: NodeDoc): Eligibility {
     : { eligible: false, reason: 'Needs a code/math layer with a broken version' };
 }
 
-export function canPathFinder(nodes: NodeDoc[], edges: EdgeDoc[]): Eligibility {
-  if (nodes.length < 3) return { eligible: false, reason: 'Needs >= 3 nodes' };
-  if (edges.length < 2) return { eligible: false, reason: 'Needs >= 2 edges' };
+export function canPathFinder(
+  nodes: NodeDoc[],
+  edges: EdgeDoc[],
+  opts?: EligibilityOptions
+): Eligibility {
+  const filteredNodes = filterNodesByPool(nodes, opts);
+  const nodeIdSet = new Set(filteredNodes.map((n) => n.id));
+  const filteredEdges = opts?.poolNodeIds
+    ? edges.filter((edge) => nodeIdSet.has(edge.source) && nodeIdSet.has(edge.target))
+    : edges;
+  if (filteredNodes.length < 3) return { eligible: false, reason: 'Needs >= 3 nodes' };
+  if (filteredEdges.length < 2) return { eligible: false, reason: 'Needs >= 2 edges' };
+  if (!findEligiblePair(filteredNodes, filteredEdges, opts)) {
+    return { eligible: false, reason: 'Needs >= 2 edges' };
+  }
   return { eligible: true };
 }
 
-export function canMissingLink(nodes: NodeDoc[]): Eligibility {
-  if (nodes.length < 2) return { eligible: false, reason: 'Needs >= 2 nodes' };
+export function canMissingLink(
+  nodes: NodeDoc[],
+  opts?: EligibilityOptions,
+  edges: EdgeDoc[] = []
+): Eligibility {
+  const filteredNodes = filterNodesByPool(nodes, opts);
+  if (filteredNodes.length < 2) return { eligible: false, reason: 'Needs >= 2 nodes' };
+  if (edges.length > 0 && !selectMissingLinkPair(filteredNodes, edges, opts)) {
+    return { eligible: false, reason: 'Needs >= 2 nodes' };
+  }
   return { eligible: true };
 }
 
-export function canClusterTitle(edges: EdgeDoc[]): Eligibility {
+export function canClusterTitle(
+  edges: EdgeDoc[],
+  opts?: EligibilityOptions,
+  nodes: NodeDoc[] = []
+): Eligibility {
+  if (nodes.length > 0) {
+    if (selectClusterTitleParent(nodes, edges, opts)) {
+      return { eligible: true };
+    }
+    return { eligible: false, reason: 'Needs a node with >= 2 parent-child children' };
+  }
   const childrenByParent: Record<string, number> = {};
-  for (const e of edges) {
+  const filteredEdges = opts?.poolNodeIds
+    ? edges.filter(
+        (edge) => opts.poolNodeIds?.has(edge.source) && opts.poolNodeIds?.has(edge.target)
+      )
+    : edges;
+  for (const e of filteredEdges) {
     if (e.type === 'parent-child') {
       childrenByParent[e.source] = (childrenByParent[e.source] ?? 0) + 1;
     }
@@ -50,9 +104,24 @@ export function canClusterTitle(edges: EdgeDoc[]): Eligibility {
     : { eligible: false, reason: 'Needs a node with >= 2 parent-child children' };
 }
 
-export function canSorter(edges: EdgeDoc[]): Eligibility {
+export function canSorter(
+  edges: EdgeDoc[],
+  opts?: EligibilityOptions,
+  nodes: NodeDoc[] = []
+): Eligibility {
+  if (nodes.length > 0) {
+    if (selectSorterCandidate(nodes, edges, opts)) {
+      return { eligible: true };
+    }
+    return { eligible: false, reason: 'Needs >= 2 nodes each with >= 2 children' };
+  }
   const parentChildren: Record<string, Set<string>> = {};
-  for (const e of edges) {
+  const filteredEdges = opts?.poolNodeIds
+    ? edges.filter(
+        (edge) => opts.poolNodeIds?.has(edge.source) && opts.poolNodeIds?.has(edge.target)
+      )
+    : edges;
+  for (const e of filteredEdges) {
     if (e.type === 'parent-child') {
       (parentChildren[e.source] ??= new Set()).add(e.target);
     }
@@ -63,14 +132,16 @@ export function canSorter(edges: EdgeDoc[]): Eligibility {
     : { eligible: false, reason: 'Needs >= 2 nodes each with >= 2 children' };
 }
 
-export function canScenarioBuilder(nodes: NodeDoc[]): Eligibility {
-  return nodes.length >= 3
+export function canScenarioBuilder(nodes: NodeDoc[], opts?: EligibilityOptions): Eligibility {
+  const filteredNodes = filterNodesByPool(nodes, opts);
+  return filteredNodes.length >= 3
     ? { eligible: true }
     : { eligible: false, reason: 'Needs >= 3 nodes' };
 }
 
-export function canDebuggerSystem(nodes: NodeDoc[]): Eligibility {
-  const has = nodes.some((n) =>
+export function canDebuggerSystem(nodes: NodeDoc[], opts?: EligibilityOptions): Eligibility {
+  const filteredNodes = filterNodesByPool(nodes, opts);
+  const has = filteredNodes.some((n) =>
     n.layers.some(
       (l) =>
         (l.contentType === 'code' || l.contentType === 'math') &&

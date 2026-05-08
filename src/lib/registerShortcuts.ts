@@ -4,6 +4,7 @@ import { useViewStore } from '../store/viewStore';
 import { useGraphStore } from '../store/graphStore';
 import { useDrillStore } from '../store/drillStore';
 import { useUserPrefsStore } from '../store/userPrefsStore';
+import { useSessionStore } from '../store/sessionStore';
 
 const TEXT_LAYER_MIN = 30;
 
@@ -84,6 +85,17 @@ export function buildShortcutRegistry(): Shortcut[] {
         if (!g.selectedNodeId) return;
         const node = g.nodes.find((n) => n.id === g.selectedNodeId);
         if (node) useDrillStore.getState().startCloze(node);
+      },
+    },
+    {
+      id: 'start-session',
+      keys: 'Ctrl+Shift+S',
+      label: 'Start a session',
+      group: 'drill',
+      matcher: matchKey.ctrlShiftS,
+      action: (e) => {
+        e.preventDefault();
+        useSessionStore.getState().openModal();
       },
     },
     {

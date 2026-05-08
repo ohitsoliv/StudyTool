@@ -75,9 +75,12 @@ function sharesTag(a: NodeDoc, b: NodeDoc): boolean {
 
 export function selectMissingLinkPair(
   nodes: NodeDoc[],
-  edges: EdgeDoc[]
+  edges: EdgeDoc[],
+  opts?: { poolNodeIds?: Set<string> }
 ): { aId: string; bId: string } | null {
-  const candidates = nodes.filter((node) => !node.archived);
+  const candidates = nodes.filter(
+    (node) => !node.archived && (!opts?.poolNodeIds || opts.poolNodeIds.has(node.id))
+  );
   if (candidates.length < 2) return null;
 
   const adjacency = buildBidirectionalAdjacency(edges);

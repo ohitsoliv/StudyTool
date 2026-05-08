@@ -1,0 +1,980 @@
+{
+  "metadata": {
+    "name": "LGBTQ+ Identity Vocabulary",
+    "description": "Dense taxonomy of LGBTQ+ identity terms. ~46 nodes spanning umbrella terms, sexuality/gender/romantic spectra, and a long tail of microlabels. Some microlabels have empty Layer 1 (definitions vary or are contested) - useful for testing Ghost Web rendering and drill-eligibility gating. Three floating nodes (skoliosexual, abrosexual, genderfae) share tags with no edges, providing Missing Link material."
+  },
+  "nodes": [
+    {
+      "id": "n_lgbtq",
+      "title": "LGBTQ+",
+      "position": { "x": 1000, "y": 80 },
+      "layers": [
+        {
+          "depth": 1,
+          "content": "Umbrella acronym for Lesbian, Gay, Bisexual, Transgender, Queer/Questioning, with the + denoting the many additional identities not captured by the letters. The most common collective shorthand for the community.",
+          "contentType": "text",
+          "createdAt": "2026-05-08T00:00:00Z"
+        }
+      ],
+      "tags": ["umbrella", "community"],
+      "mastery": { "score": 0.9, "lastReviewedAt": null, "reviewCount": 0 },
+      "createdAt": "2026-05-08T00:00:00Z",
+      "updatedAt": "2026-05-08T00:00:00Z",
+      "archived": false,
+      "clusterId": null,
+      "accessCount": 0,
+      "lastAccessedAt": null
+    },
+    {
+      "id": "n_queer",
+      "title": "queer",
+      "position": { "x": 250, "y": 80 },
+      "layers": [
+        {
+          "depth": 1,
+          "content": "An umbrella term used by some LGBTQ+ people whose identities don't fit neatly into other labels. Originally a slur, increasingly reclaimed and self-applied since the 1980s.",
+          "contentType": "text",
+          "createdAt": "2026-05-08T00:00:00Z"
+        },
+        {
+          "depth": 2,
+          "content": "Reclamation accelerated through ACT UP and Queer Nation activism in the late 1980s, and through queer theory in academia (Sedgwick, Butler). Usage is generational and context-dependent - still considered a slur by some, especially older community members.",
+          "contentType": "text",
+          "createdAt": "2026-05-08T00:00:00Z"
+        }
+      ],
+      "tags": ["umbrella", "reclaimed"],
+      "mastery": { "score": 0.7, "lastReviewedAt": null, "reviewCount": 0 },
+      "createdAt": "2026-05-08T00:00:00Z",
+      "updatedAt": "2026-05-08T00:00:00Z",
+      "archived": false,
+      "clusterId": null,
+      "accessCount": 0,
+      "lastAccessedAt": null
+    },
+    {
+      "id": "n_sam",
+      "title": "Split Attraction Model",
+      "position": { "x": 1700, "y": 80 },
+      "layers": [
+        {
+          "depth": 1,
+          "content": "A framework distinguishing romantic attraction from sexual attraction as separate axes. Allows identities like 'asexual but biromantic' or 'aromantic but bisexual' to be expressed clearly.",
+          "contentType": "text",
+          "createdAt": "2026-05-08T00:00:00Z"
+        }
+      ],
+      "tags": ["concept", "framework"],
+      "mastery": { "score": 0.55, "lastReviewedAt": null, "reviewCount": 0 },
+      "createdAt": "2026-05-08T00:00:00Z",
+      "updatedAt": "2026-05-08T00:00:00Z",
+      "archived": false,
+      "clusterId": null,
+      "accessCount": 0,
+      "lastAccessedAt": null
+    },
+    {
+      "id": "n_sexual_orientation",
+      "title": "Sexual Orientation",
+      "position": { "x": 450, "y": 200 },
+      "layers": [
+        {
+          "depth": 1,
+          "content": "A pattern of sexual attraction toward other people. Independent of romantic orientation under the Split Attraction Model.",
+          "contentType": "text",
+          "createdAt": "2026-05-08T00:00:00Z"
+        }
+      ],
+      "tags": ["category", "sexuality"],
+      "mastery": { "score": 0.75, "lastReviewedAt": null, "reviewCount": 0 },
+      "createdAt": "2026-05-08T00:00:00Z",
+      "updatedAt": "2026-05-08T00:00:00Z",
+      "archived": false,
+      "clusterId": null,
+      "accessCount": 0,
+      "lastAccessedAt": null
+    },
+    {
+      "id": "n_gender_identity",
+      "title": "Gender Identity",
+      "position": { "x": 1000, "y": 200 },
+      "layers": [
+        {
+          "depth": 1,
+          "content": "A person's internal sense of their own gender, which may or may not correspond to the sex they were assigned at birth.",
+          "contentType": "text",
+          "createdAt": "2026-05-08T00:00:00Z"
+        }
+      ],
+      "tags": ["category", "gender"],
+      "mastery": { "score": 0.7, "lastReviewedAt": null, "reviewCount": 0 },
+      "createdAt": "2026-05-08T00:00:00Z",
+      "updatedAt": "2026-05-08T00:00:00Z",
+      "archived": false,
+      "clusterId": null,
+      "accessCount": 0,
+      "lastAccessedAt": null
+    },
+    {
+      "id": "n_romantic_orientation",
+      "title": "Romantic Orientation",
+      "position": { "x": 1500, "y": 200 },
+      "layers": [
+        {
+          "depth": 1,
+          "content": "A pattern of romantic attraction toward other people. Distinguished from sexual orientation under the Split Attraction Model; one can be aromantic but sexually attracted, or vice versa.",
+          "contentType": "text",
+          "createdAt": "2026-05-08T00:00:00Z"
+        }
+      ],
+      "tags": ["category", "romantic"],
+      "mastery": { "score": 0.55, "lastReviewedAt": null, "reviewCount": 0 },
+      "createdAt": "2026-05-08T00:00:00Z",
+      "updatedAt": "2026-05-08T00:00:00Z",
+      "archived": false,
+      "clusterId": null,
+      "accessCount": 0,
+      "lastAccessedAt": null
+    },
+    {
+      "id": "n_monosexual",
+      "title": "Monosexual",
+      "position": { "x": 200, "y": 320 },
+      "layers": [
+        {
+          "depth": 1,
+          "content": "Attracted to only one gender. Includes gay, lesbian, and straight identities. Contrasted with plurisexual orientations.",
+          "contentType": "text",
+          "createdAt": "2026-05-08T00:00:00Z"
+        }
+      ],
+      "tags": ["subcategory", "sexuality"],
+      "mastery": { "score": 0.45, "lastReviewedAt": null, "reviewCount": 0 },
+      "createdAt": "2026-05-08T00:00:00Z",
+      "updatedAt": "2026-05-08T00:00:00Z",
+      "archived": false,
+      "clusterId": null,
+      "accessCount": 0,
+      "lastAccessedAt": null
+    },
+    {
+      "id": "n_plurisexual",
+      "title": "Plurisexual",
+      "position": { "x": 500, "y": 320 },
+      "layers": [
+        {
+          "depth": 1,
+          "content": "Umbrella term for orientations involving attraction to more than one gender. Includes bisexual, pansexual, omnisexual, polysexual.",
+          "contentType": "text",
+          "createdAt": "2026-05-08T00:00:00Z"
+        }
+      ],
+      "tags": ["subcategory", "sexuality"],
+      "mastery": { "score": 0.4, "lastReviewedAt": null, "reviewCount": 0 },
+      "createdAt": "2026-05-08T00:00:00Z",
+      "updatedAt": "2026-05-08T00:00:00Z",
+      "archived": false,
+      "clusterId": null,
+      "accessCount": 0,
+      "lastAccessedAt": null
+    },
+    {
+      "id": "n_asexual_spectrum",
+      "title": "Asexual Spectrum",
+      "position": { "x": 800, "y": 320 },
+      "layers": [
+        {
+          "depth": 1,
+          "content": "The range of identities characterized by little, conditional, or absent sexual attraction. Includes asexual, graysexual, demisexual, aceflux, and others.",
+          "contentType": "text",
+          "createdAt": "2026-05-08T00:00:00Z"
+        }
+      ],
+      "tags": ["subcategory", "sexuality", "asexuality"],
+      "mastery": { "score": 0.5, "lastReviewedAt": null, "reviewCount": 0 },
+      "createdAt": "2026-05-08T00:00:00Z",
+      "updatedAt": "2026-05-08T00:00:00Z",
+      "archived": false,
+      "clusterId": null,
+      "accessCount": 0,
+      "lastAccessedAt": null
+    },
+    {
+      "id": "n_trans",
+      "title": "trans",
+      "position": { "x": 880, "y": 320 },
+      "layers": [
+        {
+          "depth": 1,
+          "content": "Short for transgender: a person whose gender identity differs from the sex they were assigned at birth. Distinct from sexual orientation; trans people may hold any orientation.",
+          "contentType": "text",
+          "createdAt": "2026-05-08T00:00:00Z"
+        },
+        {
+          "depth": 2,
+          "content": "The 'trans' umbrella historically includes both binary trans identities (trans women, trans men) and many nonbinary identities, though some nonbinary people do not identify as trans. Boundary is contested and personal.",
+          "contentType": "text",
+          "createdAt": "2026-05-08T00:00:00Z"
+        }
+      ],
+      "tags": ["subcategory", "gender", "trans"],
+      "mastery": { "score": 0.65, "lastReviewedAt": null, "reviewCount": 0 },
+      "createdAt": "2026-05-08T00:00:00Z",
+      "updatedAt": "2026-05-08T00:00:00Z",
+      "archived": false,
+      "clusterId": null,
+      "accessCount": 0,
+      "lastAccessedAt": null
+    },
+    {
+      "id": "n_cis",
+      "title": "cis",
+      "position": { "x": 1020, "y": 320 },
+      "layers": [
+        {
+          "depth": 1,
+          "content": "Short for cisgender: a person whose gender identity matches the sex they were assigned at birth. The complement of trans.",
+          "contentType": "text",
+          "createdAt": "2026-05-08T00:00:00Z"
+        }
+      ],
+      "tags": ["subcategory", "gender", "cis"],
+      "mastery": { "score": 0.85, "lastReviewedAt": null, "reviewCount": 0 },
+      "createdAt": "2026-05-08T00:00:00Z",
+      "updatedAt": "2026-05-08T00:00:00Z",
+      "archived": false,
+      "clusterId": null,
+      "accessCount": 0,
+      "lastAccessedAt": null
+    },
+    {
+      "id": "n_nonbinary",
+      "title": "nonbinary",
+      "position": { "x": 1180, "y": 320 },
+      "layers": [
+        {
+          "depth": 1,
+          "content": "An umbrella term for gender identities that fall outside the male/female binary. Often abbreviated NB or enby. May or may not overlap with trans depending on the individual.",
+          "contentType": "text",
+          "createdAt": "2026-05-08T00:00:00Z"
+        }
+      ],
+      "tags": ["subcategory", "gender", "nonbinary"],
+      "mastery": { "score": 0.6, "lastReviewedAt": null, "reviewCount": 0 },
+      "createdAt": "2026-05-08T00:00:00Z",
+      "updatedAt": "2026-05-08T00:00:00Z",
+      "archived": false,
+      "clusterId": null,
+      "accessCount": 0,
+      "lastAccessedAt": null
+    },
+    {
+      "id": "n_aromantic_spectrum",
+      "title": "Aromantic Spectrum",
+      "position": { "x": 1500, "y": 320 },
+      "layers": [
+        {
+          "depth": 1,
+          "content": "The range of identities characterized by little, conditional, or absent romantic attraction. Includes aromantic, grayromantic, demiromantic, and others.",
+          "contentType": "text",
+          "createdAt": "2026-05-08T00:00:00Z"
+        }
+      ],
+      "tags": ["subcategory", "romantic", "aromantic"],
+      "mastery": { "score": 0.4, "lastReviewedAt": null, "reviewCount": 0 },
+      "createdAt": "2026-05-08T00:00:00Z",
+      "updatedAt": "2026-05-08T00:00:00Z",
+      "archived": false,
+      "clusterId": null,
+      "accessCount": 0,
+      "lastAccessedAt": null
+    },
+    {
+      "id": "n_intersex",
+      "title": "intersex",
+      "position": { "x": 1330, "y": 200 },
+      "layers": [
+        {
+          "depth": 1,
+          "content": "Born with sex characteristics (chromosomes, hormones, anatomy) that don't fit typical binary definitions of male or female. A biological status, distinct from gender identity, though often grouped under LGBTQ+.",
+          "contentType": "text",
+          "createdAt": "2026-05-08T00:00:00Z"
+        }
+      ],
+      "tags": ["sex", "gender"],
+      "mastery": { "score": 0.5, "lastReviewedAt": null, "reviewCount": 0 },
+      "createdAt": "2026-05-08T00:00:00Z",
+      "updatedAt": "2026-05-08T00:00:00Z",
+      "archived": false,
+      "clusterId": null,
+      "accessCount": 0,
+      "lastAccessedAt": null
+    },
+    {
+      "id": "n_two_spirit",
+      "title": "two-spirit",
+      "position": { "x": 1750, "y": 200 },
+      "layers": [
+        {
+          "depth": 1,
+          "content": "A modern, pan-Indigenous umbrella term used by some Indigenous North Americans to describe a person who embodies both masculine and feminine spirits, or fulfills a third-gender role within their nation. Specific meanings vary by nation.",
+          "contentType": "text",
+          "createdAt": "2026-05-08T00:00:00Z"
+        }
+      ],
+      "tags": ["gender", "indigenous"],
+      "mastery": { "score": 0.4, "lastReviewedAt": null, "reviewCount": 0 },
+      "createdAt": "2026-05-08T00:00:00Z",
+      "updatedAt": "2026-05-08T00:00:00Z",
+      "archived": false,
+      "clusterId": null,
+      "accessCount": 0,
+      "lastAccessedAt": null
+    },
+    {
+      "id": "n_questioning",
+      "title": "Questioning",
+      "position": { "x": 50, "y": 200 },
+      "layers": [
+        {
+          "depth": 1,
+          "content": "The process or status of exploring one's own sexual orientation, romantic orientation, or gender identity. The Q in some expansions of LGBTQ+.",
+          "contentType": "text",
+          "createdAt": "2026-05-08T00:00:00Z"
+        }
+      ],
+      "tags": ["concept", "community"],
+      "mastery": { "score": 0.6, "lastReviewedAt": null, "reviewCount": 0 },
+      "createdAt": "2026-05-08T00:00:00Z",
+      "updatedAt": "2026-05-08T00:00:00Z",
+      "archived": false,
+      "clusterId": null,
+      "accessCount": 0,
+      "lastAccessedAt": null
+    },
+    {
+      "id": "n_coming_out",
+      "title": "Coming Out",
+      "position": { "x": 50, "y": 320 },
+      "layers": [
+        {
+          "depth": 1,
+          "content": "The process of disclosing one's LGBTQ+ identity to others. Often described as ongoing rather than a single event, since one comes out repeatedly across new contexts.",
+          "contentType": "text",
+          "createdAt": "2026-05-08T00:00:00Z"
+        }
+      ],
+      "tags": ["concept", "community"],
+      "mastery": { "score": 0.7, "lastReviewedAt": null, "reviewCount": 0 },
+      "createdAt": "2026-05-08T00:00:00Z",
+      "updatedAt": "2026-05-08T00:00:00Z",
+      "archived": false,
+      "clusterId": null,
+      "accessCount": 0,
+      "lastAccessedAt": null
+    },
+    {
+      "id": "n_pride",
+      "title": "Pride",
+      "position": { "x": 50, "y": 440 },
+      "layers": [
+        {
+          "depth": 1,
+          "content": "Both a personal stance - refusing shame about one's LGBTQ+ identity - and a worldwide movement of celebrations, marches, and protests rooted in the 1969 Stonewall uprising.",
+          "contentType": "text",
+          "createdAt": "2026-05-08T00:00:00Z"
+        }
+      ],
+      "tags": ["concept", "community"],
+      "mastery": { "score": 0.75, "lastReviewedAt": null, "reviewCount": 0 },
+      "createdAt": "2026-05-08T00:00:00Z",
+      "updatedAt": "2026-05-08T00:00:00Z",
+      "archived": false,
+      "clusterId": null,
+      "accessCount": 0,
+      "lastAccessedAt": null
+    },
+    {
+      "id": "n_gay",
+      "title": "gay",
+      "position": { "x": 100, "y": 460 },
+      "layers": [
+        {
+          "depth": 1,
+          "content": "Romantically and/or sexually attracted to people of the same gender. Often used by men, though historically and currently used as a broader synonym for 'homosexual.'",
+          "contentType": "text",
+          "createdAt": "2026-05-08T00:00:00Z"
+        }
+      ],
+      "tags": ["sexuality", "monosexual"],
+      "mastery": { "score": 0.85, "lastReviewedAt": null, "reviewCount": 0 },
+      "createdAt": "2026-05-08T00:00:00Z",
+      "updatedAt": "2026-05-08T00:00:00Z",
+      "archived": false,
+      "clusterId": null,
+      "accessCount": 0,
+      "lastAccessedAt": null
+    },
+    {
+      "id": "n_lesbian",
+      "title": "lesbian",
+      "position": { "x": 220, "y": 460 },
+      "layers": [
+        {
+          "depth": 1,
+          "content": "A woman who is romantically and/or sexually attracted to other women. Also used by some nonbinary people whose identities are connected to womanhood or female-aligned attraction.",
+          "contentType": "text",
+          "createdAt": "2026-05-08T00:00:00Z"
+        }
+      ],
+      "tags": ["sexuality", "monosexual"],
+      "mastery": { "score": 0.8, "lastReviewedAt": null, "reviewCount": 0 },
+      "createdAt": "2026-05-08T00:00:00Z",
+      "updatedAt": "2026-05-08T00:00:00Z",
+      "archived": false,
+      "clusterId": null,
+      "accessCount": 0,
+      "lastAccessedAt": null
+    },
+    {
+      "id": "n_straight",
+      "title": "straight",
+      "position": { "x": 340, "y": 460 },
+      "layers": [
+        {
+          "depth": 1,
+          "content": "Heterosexual: attracted exclusively, or primarily, to people of a different gender (typically the 'opposite' binary gender). The default-assumed orientation in most cultures.",
+          "contentType": "text",
+          "createdAt": "2026-05-08T00:00:00Z"
+        }
+      ],
+      "tags": ["sexuality", "monosexual"],
+      "mastery": { "score": 0.9, "lastReviewedAt": null, "reviewCount": 0 },
+      "createdAt": "2026-05-08T00:00:00Z",
+      "updatedAt": "2026-05-08T00:00:00Z",
+      "archived": false,
+      "clusterId": null,
+      "accessCount": 0,
+      "lastAccessedAt": null
+    },
+    {
+      "id": "n_bisexual",
+      "title": "bisexual",
+      "position": { "x": 420, "y": 460 },
+      "layers": [
+        {
+          "depth": 1,
+          "content": "Attracted to people of more than one gender. Modern definitions emphasize 'two or more genders' rather than a strict binary.",
+          "contentType": "text",
+          "createdAt": "2026-05-08T00:00:00Z"
+        },
+        {
+          "depth": 2,
+          "content": "The 'bi' prefix originally referred to a binary view (men and women), but the contemporary community definition (Bisexual Manifesto, 1990) explicitly includes attraction to people of any gender. The boundary with pansexual is debated and often a personal choice.",
+          "contentType": "text",
+          "createdAt": "2026-05-08T00:00:00Z"
+        }
+      ],
+      "tags": ["sexuality", "plurisexual"],
+      "mastery": { "score": 0.7, "lastReviewedAt": null, "reviewCount": 0 },
+      "createdAt": "2026-05-08T00:00:00Z",
+      "updatedAt": "2026-05-08T00:00:00Z",
+      "archived": false,
+      "clusterId": null,
+      "accessCount": 0,
+      "lastAccessedAt": null
+    },
+    {
+      "id": "n_pansexual",
+      "title": "pansexual",
+      "position": { "x": 540, "y": 460 },
+      "layers": [
+        {
+          "depth": 1,
+          "content": "Attracted to people regardless of gender; gender is not a primary factor in attraction. Sometimes summarized as 'hearts not parts.'",
+          "contentType": "text",
+          "createdAt": "2026-05-08T00:00:00Z"
+        }
+      ],
+      "tags": ["sexuality", "plurisexual"],
+      "mastery": { "score": 0.6, "lastReviewedAt": null, "reviewCount": 0 },
+      "createdAt": "2026-05-08T00:00:00Z",
+      "updatedAt": "2026-05-08T00:00:00Z",
+      "archived": false,
+      "clusterId": null,
+      "accessCount": 0,
+      "lastAccessedAt": null
+    },
+    {
+      "id": "n_omnisexual",
+      "title": "omnisexual",
+      "position": { "x": 420, "y": 600 },
+      "layers": [],
+      "tags": ["sexuality", "plurisexual", "microlabel"],
+      "mastery": { "score": 0.2, "lastReviewedAt": null, "reviewCount": 0 },
+      "createdAt": "2026-05-08T00:00:00Z",
+      "updatedAt": "2026-05-08T00:00:00Z",
+      "archived": false,
+      "clusterId": null,
+      "accessCount": 0,
+      "lastAccessedAt": null
+    },
+    {
+      "id": "n_polysexual",
+      "title": "polysexual",
+      "position": { "x": 540, "y": 600 },
+      "layers": [],
+      "tags": ["sexuality", "plurisexual", "microlabel"],
+      "mastery": { "score": 0.15, "lastReviewedAt": null, "reviewCount": 0 },
+      "createdAt": "2026-05-08T00:00:00Z",
+      "updatedAt": "2026-05-08T00:00:00Z",
+      "archived": false,
+      "clusterId": null,
+      "accessCount": 0,
+      "lastAccessedAt": null
+    },
+    {
+      "id": "n_asexual",
+      "title": "asexual",
+      "position": { "x": 660, "y": 460 },
+      "layers": [
+        {
+          "depth": 1,
+          "content": "Experiencing little or no sexual attraction to others. Asexual people may still experience romantic attraction, may have sex, and may be in committed relationships - asexuality describes attraction, not behavior.",
+          "contentType": "text",
+          "createdAt": "2026-05-08T00:00:00Z"
+        }
+      ],
+      "tags": ["sexuality", "asexuality"],
+      "mastery": { "score": 0.65, "lastReviewedAt": null, "reviewCount": 0 },
+      "createdAt": "2026-05-08T00:00:00Z",
+      "updatedAt": "2026-05-08T00:00:00Z",
+      "archived": false,
+      "clusterId": null,
+      "accessCount": 0,
+      "lastAccessedAt": null
+    },
+    {
+      "id": "n_graysexual",
+      "title": "graysexual",
+      "position": { "x": 780, "y": 460 },
+      "layers": [
+        {
+          "depth": 1,
+          "content": "Experiencing sexual attraction rarely, weakly, or only under specific circumstances. Sometimes called gray-ace.",
+          "contentType": "text",
+          "createdAt": "2026-05-08T00:00:00Z"
+        }
+      ],
+      "tags": ["sexuality", "asexuality", "microlabel"],
+      "mastery": { "score": 0.45, "lastReviewedAt": null, "reviewCount": 0 },
+      "createdAt": "2026-05-08T00:00:00Z",
+      "updatedAt": "2026-05-08T00:00:00Z",
+      "archived": false,
+      "clusterId": null,
+      "accessCount": 0,
+      "lastAccessedAt": null
+    },
+    {
+      "id": "n_demisexual",
+      "title": "demisexual",
+      "position": { "x": 660, "y": 600 },
+      "layers": [
+        {
+          "depth": 1,
+          "content": "Experiencing sexual attraction only after a strong emotional bond has formed. A specific position on the asexual spectrum that depends on the Split Attraction Model to be expressed cleanly.",
+          "contentType": "text",
+          "createdAt": "2026-05-08T00:00:00Z"
+        }
+      ],
+      "tags": ["sexuality", "asexuality", "microlabel"],
+      "mastery": { "score": 0.5, "lastReviewedAt": null, "reviewCount": 0 },
+      "createdAt": "2026-05-08T00:00:00Z",
+      "updatedAt": "2026-05-08T00:00:00Z",
+      "archived": false,
+      "clusterId": null,
+      "accessCount": 0,
+      "lastAccessedAt": null
+    },
+    {
+      "id": "n_aceflux",
+      "title": "aceflux",
+      "position": { "x": 780, "y": 600 },
+      "layers": [],
+      "tags": ["sexuality", "asexuality", "microlabel"],
+      "mastery": { "score": 0.15, "lastReviewedAt": null, "reviewCount": 0 },
+      "createdAt": "2026-05-08T00:00:00Z",
+      "updatedAt": "2026-05-08T00:00:00Z",
+      "archived": false,
+      "clusterId": null,
+      "accessCount": 0,
+      "lastAccessedAt": null
+    },
+    {
+      "id": "n_aromantic",
+      "title": "aromantic",
+      "position": { "x": 1440, "y": 460 },
+      "layers": [
+        {
+          "depth": 1,
+          "content": "Experiencing little or no romantic attraction to others. Aromantic people may still experience sexual attraction, form deep platonic bonds, and live partnered or unpartnered lives by choice.",
+          "contentType": "text",
+          "createdAt": "2026-05-08T00:00:00Z"
+        }
+      ],
+      "tags": ["romantic", "aromantic"],
+      "mastery": { "score": 0.55, "lastReviewedAt": null, "reviewCount": 0 },
+      "createdAt": "2026-05-08T00:00:00Z",
+      "updatedAt": "2026-05-08T00:00:00Z",
+      "archived": false,
+      "clusterId": null,
+      "accessCount": 0,
+      "lastAccessedAt": null
+    },
+    {
+      "id": "n_grayromantic",
+      "title": "grayromantic",
+      "position": { "x": 1560, "y": 460 },
+      "layers": [
+        {
+          "depth": 1,
+          "content": "Experiencing romantic attraction rarely or only under specific conditions.",
+          "contentType": "text",
+          "createdAt": "2026-05-08T00:00:00Z"
+        }
+      ],
+      "tags": ["romantic", "aromantic", "microlabel"],
+      "mastery": { "score": 0.3, "lastReviewedAt": null, "reviewCount": 0 },
+      "createdAt": "2026-05-08T00:00:00Z",
+      "updatedAt": "2026-05-08T00:00:00Z",
+      "archived": false,
+      "clusterId": null,
+      "accessCount": 0,
+      "lastAccessedAt": null
+    },
+    {
+      "id": "n_demiromantic",
+      "title": "demiromantic",
+      "position": { "x": 1440, "y": 600 },
+      "layers": [
+        {
+          "depth": 1,
+          "content": "Experiencing romantic attraction only after a strong emotional bond has formed. The romantic-axis parallel of demisexual.",
+          "contentType": "text",
+          "createdAt": "2026-05-08T00:00:00Z"
+        }
+      ],
+      "tags": ["romantic", "aromantic", "microlabel"],
+      "mastery": { "score": 0.35, "lastReviewedAt": null, "reviewCount": 0 },
+      "createdAt": "2026-05-08T00:00:00Z",
+      "updatedAt": "2026-05-08T00:00:00Z",
+      "archived": false,
+      "clusterId": null,
+      "accessCount": 0,
+      "lastAccessedAt": null
+    },
+    {
+      "id": "n_aroflux",
+      "title": "aroflux",
+      "position": { "x": 1560, "y": 600 },
+      "layers": [],
+      "tags": ["romantic", "aromantic", "microlabel"],
+      "mastery": { "score": 0.15, "lastReviewedAt": null, "reviewCount": 0 },
+      "createdAt": "2026-05-08T00:00:00Z",
+      "updatedAt": "2026-05-08T00:00:00Z",
+      "archived": false,
+      "clusterId": null,
+      "accessCount": 0,
+      "lastAccessedAt": null
+    },
+    {
+      "id": "n_trans_woman",
+      "title": "trans woman",
+      "position": { "x": 820, "y": 460 },
+      "layers": [
+        {
+          "depth": 1,
+          "content": "A woman who was assigned male at birth. Trans women are women, full stop; the 'trans' modifier describes life history, not gender.",
+          "contentType": "text",
+          "createdAt": "2026-05-08T00:00:00Z"
+        }
+      ],
+      "tags": ["gender", "trans"],
+      "mastery": { "score": 0.7, "lastReviewedAt": null, "reviewCount": 0 },
+      "createdAt": "2026-05-08T00:00:00Z",
+      "updatedAt": "2026-05-08T00:00:00Z",
+      "archived": false,
+      "clusterId": null,
+      "accessCount": 0,
+      "lastAccessedAt": null
+    },
+    {
+      "id": "n_trans_man",
+      "title": "trans man",
+      "position": { "x": 940, "y": 460 },
+      "layers": [
+        {
+          "depth": 1,
+          "content": "A man who was assigned female at birth. Trans men are men, full stop; the 'trans' modifier describes life history, not gender.",
+          "contentType": "text",
+          "createdAt": "2026-05-08T00:00:00Z"
+        }
+      ],
+      "tags": ["gender", "trans"],
+      "mastery": { "score": 0.7, "lastReviewedAt": null, "reviewCount": 0 },
+      "createdAt": "2026-05-08T00:00:00Z",
+      "updatedAt": "2026-05-08T00:00:00Z",
+      "archived": false,
+      "clusterId": null,
+      "accessCount": 0,
+      "lastAccessedAt": null
+    },
+    {
+      "id": "n_agender",
+      "title": "agender",
+      "position": { "x": 1080, "y": 460 },
+      "layers": [
+        {
+          "depth": 1,
+          "content": "Without gender; not identifying with any gender at all. Distinct from nonbinary identities that involve a positive gender identity outside the binary.",
+          "contentType": "text",
+          "createdAt": "2026-05-08T00:00:00Z"
+        }
+      ],
+      "tags": ["gender", "nonbinary"],
+      "mastery": { "score": 0.5, "lastReviewedAt": null, "reviewCount": 0 },
+      "createdAt": "2026-05-08T00:00:00Z",
+      "updatedAt": "2026-05-08T00:00:00Z",
+      "archived": false,
+      "clusterId": null,
+      "accessCount": 0,
+      "lastAccessedAt": null
+    },
+    {
+      "id": "n_genderfluid",
+      "title": "genderfluid",
+      "position": { "x": 1200, "y": 460 },
+      "layers": [
+        {
+          "depth": 1,
+          "content": "Having a gender identity that varies over time - between genders, in intensity, or both. Changes may happen over hours, days, months, or years.",
+          "contentType": "text",
+          "createdAt": "2026-05-08T00:00:00Z"
+        }
+      ],
+      "tags": ["gender", "nonbinary"],
+      "mastery": { "score": 0.45, "lastReviewedAt": null, "reviewCount": 0 },
+      "createdAt": "2026-05-08T00:00:00Z",
+      "updatedAt": "2026-05-08T00:00:00Z",
+      "archived": false,
+      "clusterId": null,
+      "accessCount": 0,
+      "lastAccessedAt": null
+    },
+    {
+      "id": "n_genderqueer",
+      "title": "genderqueer",
+      "position": { "x": 1320, "y": 460 },
+      "layers": [
+        {
+          "depth": 1,
+          "content": "An older term for a gender identity that is neither exclusively male nor exclusively female. Often used as a synonym for nonbinary; for some people the two are distinct.",
+          "contentType": "text",
+          "createdAt": "2026-05-08T00:00:00Z"
+        }
+      ],
+      "tags": ["gender", "nonbinary"],
+      "mastery": { "score": 0.4, "lastReviewedAt": null, "reviewCount": 0 },
+      "createdAt": "2026-05-08T00:00:00Z",
+      "updatedAt": "2026-05-08T00:00:00Z",
+      "archived": false,
+      "clusterId": null,
+      "accessCount": 0,
+      "lastAccessedAt": null
+    },
+    {
+      "id": "n_bigender",
+      "title": "bigender",
+      "position": { "x": 1080, "y": 600 },
+      "layers": [],
+      "tags": ["gender", "nonbinary", "microlabel"],
+      "mastery": { "score": 0.2, "lastReviewedAt": null, "reviewCount": 0 },
+      "createdAt": "2026-05-08T00:00:00Z",
+      "updatedAt": "2026-05-08T00:00:00Z",
+      "archived": false,
+      "clusterId": null,
+      "accessCount": 0,
+      "lastAccessedAt": null
+    },
+    {
+      "id": "n_demigender",
+      "title": "demigender",
+      "position": { "x": 1200, "y": 600 },
+      "layers": [],
+      "tags": ["gender", "nonbinary", "microlabel"],
+      "mastery": { "score": 0.15, "lastReviewedAt": null, "reviewCount": 0 },
+      "createdAt": "2026-05-08T00:00:00Z",
+      "updatedAt": "2026-05-08T00:00:00Z",
+      "archived": false,
+      "clusterId": null,
+      "accessCount": 0,
+      "lastAccessedAt": null
+    },
+    {
+      "id": "n_demigirl",
+      "title": "demigirl",
+      "position": { "x": 1140, "y": 740 },
+      "layers": [],
+      "tags": ["gender", "nonbinary", "microlabel"],
+      "mastery": { "score": 0.1, "lastReviewedAt": null, "reviewCount": 0 },
+      "createdAt": "2026-05-08T00:00:00Z",
+      "updatedAt": "2026-05-08T00:00:00Z",
+      "archived": false,
+      "clusterId": null,
+      "accessCount": 0,
+      "lastAccessedAt": null
+    },
+    {
+      "id": "n_demiboy",
+      "title": "demiboy",
+      "position": { "x": 1260, "y": 740 },
+      "layers": [],
+      "tags": ["gender", "nonbinary", "microlabel"],
+      "mastery": { "score": 0.1, "lastReviewedAt": null, "reviewCount": 0 },
+      "createdAt": "2026-05-08T00:00:00Z",
+      "updatedAt": "2026-05-08T00:00:00Z",
+      "archived": false,
+      "clusterId": null,
+      "accessCount": 0,
+      "lastAccessedAt": null
+    },
+    {
+      "id": "n_xenogender",
+      "title": "xenogender",
+      "position": { "x": 1320, "y": 600 },
+      "layers": [],
+      "tags": ["gender", "nonbinary", "microlabel"],
+      "mastery": { "score": 0.1, "lastReviewedAt": null, "reviewCount": 0 },
+      "createdAt": "2026-05-08T00:00:00Z",
+      "updatedAt": "2026-05-08T00:00:00Z",
+      "archived": false,
+      "clusterId": null,
+      "accessCount": 0,
+      "lastAccessedAt": null
+    },
+    {
+      "id": "n_skoliosexual",
+      "title": "skoliosexual",
+      "position": { "x": 1900, "y": 100 },
+      "layers": [],
+      "tags": ["sexuality", "microlabel"],
+      "mastery": { "score": 0.1, "lastReviewedAt": null, "reviewCount": 0 },
+      "createdAt": "2026-05-08T00:00:00Z",
+      "updatedAt": "2026-05-08T00:00:00Z",
+      "archived": false,
+      "clusterId": null,
+      "accessCount": 0,
+      "lastAccessedAt": null
+    },
+    {
+      "id": "n_abrosexual",
+      "title": "abrosexual",
+      "position": { "x": 1900, "y": 240 },
+      "layers": [],
+      "tags": ["sexuality", "microlabel"],
+      "mastery": { "score": 0.1, "lastReviewedAt": null, "reviewCount": 0 },
+      "createdAt": "2026-05-08T00:00:00Z",
+      "updatedAt": "2026-05-08T00:00:00Z",
+      "archived": false,
+      "clusterId": null,
+      "accessCount": 0,
+      "lastAccessedAt": null
+    },
+    {
+      "id": "n_genderfae",
+      "title": "genderfae",
+      "position": { "x": 1900, "y": 380 },
+      "layers": [],
+      "tags": ["gender", "microlabel"],
+      "mastery": { "score": 0.1, "lastReviewedAt": null, "reviewCount": 0 },
+      "createdAt": "2026-05-08T00:00:00Z",
+      "updatedAt": "2026-05-08T00:00:00Z",
+      "archived": false,
+      "clusterId": null,
+      "accessCount": 0,
+      "lastAccessedAt": null
+    }
+  ],
+  "edges": [
+    { "id": "e1", "source": "n_lgbtq", "target": "n_sexual_orientation", "type": "parent-child", "createdAt": "2026-05-08T00:00:00Z" },
+    { "id": "e2", "source": "n_lgbtq", "target": "n_gender_identity", "type": "parent-child", "createdAt": "2026-05-08T00:00:00Z" },
+    { "id": "e3", "source": "n_lgbtq", "target": "n_romantic_orientation", "type": "parent-child", "createdAt": "2026-05-08T00:00:00Z" },
+
+    { "id": "e4", "source": "n_sexual_orientation", "target": "n_monosexual", "type": "parent-child", "createdAt": "2026-05-08T00:00:00Z" },
+    { "id": "e5", "source": "n_sexual_orientation", "target": "n_plurisexual", "type": "parent-child", "createdAt": "2026-05-08T00:00:00Z" },
+    { "id": "e6", "source": "n_sexual_orientation", "target": "n_asexual_spectrum", "type": "parent-child", "createdAt": "2026-05-08T00:00:00Z" },
+
+    { "id": "e7", "source": "n_monosexual", "target": "n_gay", "type": "parent-child", "createdAt": "2026-05-08T00:00:00Z" },
+    { "id": "e8", "source": "n_monosexual", "target": "n_lesbian", "type": "parent-child", "createdAt": "2026-05-08T00:00:00Z" },
+    { "id": "e9", "source": "n_monosexual", "target": "n_straight", "type": "parent-child", "createdAt": "2026-05-08T00:00:00Z" },
+
+    { "id": "e10", "source": "n_plurisexual", "target": "n_bisexual", "type": "parent-child", "createdAt": "2026-05-08T00:00:00Z" },
+    { "id": "e11", "source": "n_plurisexual", "target": "n_pansexual", "type": "parent-child", "createdAt": "2026-05-08T00:00:00Z" },
+    { "id": "e12", "source": "n_plurisexual", "target": "n_omnisexual", "type": "parent-child", "createdAt": "2026-05-08T00:00:00Z" },
+    { "id": "e13", "source": "n_plurisexual", "target": "n_polysexual", "type": "parent-child", "createdAt": "2026-05-08T00:00:00Z" },
+
+    { "id": "e14", "source": "n_asexual_spectrum", "target": "n_asexual", "type": "parent-child", "createdAt": "2026-05-08T00:00:00Z" },
+    { "id": "e15", "source": "n_asexual_spectrum", "target": "n_graysexual", "type": "parent-child", "createdAt": "2026-05-08T00:00:00Z" },
+    { "id": "e16", "source": "n_asexual_spectrum", "target": "n_demisexual", "type": "parent-child", "createdAt": "2026-05-08T00:00:00Z" },
+    { "id": "e17", "source": "n_asexual_spectrum", "target": "n_aceflux", "type": "parent-child", "createdAt": "2026-05-08T00:00:00Z" },
+
+    { "id": "e18", "source": "n_gender_identity", "target": "n_trans", "type": "parent-child", "createdAt": "2026-05-08T00:00:00Z" },
+    { "id": "e19", "source": "n_gender_identity", "target": "n_cis", "type": "parent-child", "createdAt": "2026-05-08T00:00:00Z" },
+    { "id": "e20", "source": "n_gender_identity", "target": "n_nonbinary", "type": "parent-child", "createdAt": "2026-05-08T00:00:00Z" },
+
+    { "id": "e21", "source": "n_trans", "target": "n_trans_woman", "type": "parent-child", "createdAt": "2026-05-08T00:00:00Z" },
+    { "id": "e22", "source": "n_trans", "target": "n_trans_man", "type": "parent-child", "createdAt": "2026-05-08T00:00:00Z" },
+
+    { "id": "e23", "source": "n_nonbinary", "target": "n_agender", "type": "parent-child", "createdAt": "2026-05-08T00:00:00Z" },
+    { "id": "e24", "source": "n_nonbinary", "target": "n_genderfluid", "type": "parent-child", "createdAt": "2026-05-08T00:00:00Z" },
+    { "id": "e25", "source": "n_nonbinary", "target": "n_genderqueer", "type": "parent-child", "createdAt": "2026-05-08T00:00:00Z" },
+    { "id": "e26", "source": "n_nonbinary", "target": "n_bigender", "type": "parent-child", "createdAt": "2026-05-08T00:00:00Z" },
+    { "id": "e27", "source": "n_nonbinary", "target": "n_demigender", "type": "parent-child", "createdAt": "2026-05-08T00:00:00Z" },
+    { "id": "e28", "source": "n_nonbinary", "target": "n_xenogender", "type": "parent-child", "createdAt": "2026-05-08T00:00:00Z" },
+
+    { "id": "e29", "source": "n_demigender", "target": "n_demigirl", "type": "parent-child", "createdAt": "2026-05-08T00:00:00Z" },
+    { "id": "e30", "source": "n_demigender", "target": "n_demiboy", "type": "parent-child", "createdAt": "2026-05-08T00:00:00Z" },
+
+    { "id": "e31", "source": "n_romantic_orientation", "target": "n_aromantic_spectrum", "type": "parent-child", "createdAt": "2026-05-08T00:00:00Z" },
+    { "id": "e32", "source": "n_aromantic_spectrum", "target": "n_aromantic", "type": "parent-child", "createdAt": "2026-05-08T00:00:00Z" },
+    { "id": "e33", "source": "n_aromantic_spectrum", "target": "n_grayromantic", "type": "parent-child", "createdAt": "2026-05-08T00:00:00Z" },
+    { "id": "e34", "source": "n_aromantic_spectrum", "target": "n_demiromantic", "type": "parent-child", "createdAt": "2026-05-08T00:00:00Z" },
+    { "id": "e35", "source": "n_aromantic_spectrum", "target": "n_aroflux", "type": "parent-child", "createdAt": "2026-05-08T00:00:00Z" },
+
+    { "id": "e36", "source": "n_lgbtq", "target": "n_queer", "type": "related", "createdAt": "2026-05-08T00:00:00Z" },
+    { "id": "e37", "source": "n_queer", "target": "n_gay", "type": "related", "createdAt": "2026-05-08T00:00:00Z" },
+    { "id": "e38", "source": "n_queer", "target": "n_lesbian", "type": "related", "createdAt": "2026-05-08T00:00:00Z" },
+    { "id": "e39", "source": "n_queer", "target": "n_bisexual", "type": "related", "createdAt": "2026-05-08T00:00:00Z" },
+    { "id": "e40", "source": "n_queer", "target": "n_trans", "type": "related", "createdAt": "2026-05-08T00:00:00Z" },
+    { "id": "e41", "source": "n_queer", "target": "n_nonbinary", "type": "related", "createdAt": "2026-05-08T00:00:00Z" },
+
+    { "id": "e42", "source": "n_bisexual", "target": "n_pansexual", "type": "related", "label": "often confused or used interchangeably", "createdAt": "2026-05-08T00:00:00Z" },
+    { "id": "e43", "source": "n_pansexual", "target": "n_omnisexual", "type": "related", "createdAt": "2026-05-08T00:00:00Z" },
+    { "id": "e44", "source": "n_bisexual", "target": "n_polysexual", "type": "related", "createdAt": "2026-05-08T00:00:00Z" },
+    { "id": "e45", "source": "n_demisexual", "target": "n_demiromantic", "type": "related", "label": "parallel concepts on different axes", "createdAt": "2026-05-08T00:00:00Z" },
+
+    { "id": "e46", "source": "n_intersex", "target": "n_gender_identity", "type": "related", "createdAt": "2026-05-08T00:00:00Z" },
+    { "id": "e47", "source": "n_two_spirit", "target": "n_gender_identity", "type": "related", "createdAt": "2026-05-08T00:00:00Z" },
+    { "id": "e48", "source": "n_two_spirit", "target": "n_sexual_orientation", "type": "related", "createdAt": "2026-05-08T00:00:00Z" },
+
+    { "id": "e49", "source": "n_nonbinary", "target": "n_trans", "type": "related", "label": "overlap is contested and personal", "createdAt": "2026-05-08T00:00:00Z" },
+
+    { "id": "e50", "source": "n_sam", "target": "n_asexual_spectrum", "type": "prerequisite", "createdAt": "2026-05-08T00:00:00Z" },
+    { "id": "e51", "source": "n_sam", "target": "n_aromantic_spectrum", "type": "prerequisite", "createdAt": "2026-05-08T00:00:00Z" },
+    { "id": "e52", "source": "n_sam", "target": "n_demisexual", "type": "prerequisite", "createdAt": "2026-05-08T00:00:00Z" },
+    { "id": "e53", "source": "n_sexual_orientation", "target": "n_romantic_orientation", "type": "prerequisite", "label": "typically learned in this order", "createdAt": "2026-05-08T00:00:00Z" },
+
+    { "id": "e54", "source": "n_questioning", "target": "n_coming_out", "type": "sequence", "createdAt": "2026-05-08T00:00:00Z" },
+    { "id": "e55", "source": "n_coming_out", "target": "n_pride", "type": "sequence", "createdAt": "2026-05-08T00:00:00Z" }
+  ]
+}

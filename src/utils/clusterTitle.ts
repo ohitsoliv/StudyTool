@@ -2,9 +2,16 @@ import type { EdgeDoc, NodeDoc } from '../types/graph';
 
 export function selectClusterTitleParent(
   nodes: NodeDoc[],
-  edges: EdgeDoc[]
+  edges: EdgeDoc[],
+  opts?: { poolNodeIds?: Set<string> }
 ): { parentId: string; childIds: string[] } | null {
-  const nodeIds = new Set(nodes.filter((node) => !node.archived).map((node) => node.id));
+  const nodeIds = new Set(
+    nodes
+      .filter(
+        (node) => !node.archived && (!opts?.poolNodeIds || opts.poolNodeIds.has(node.id))
+      )
+      .map((node) => node.id)
+  );
   const parentToChildren = new Map<string, Set<string>>();
 
   for (const edge of edges) {

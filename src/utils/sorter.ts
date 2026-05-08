@@ -8,9 +8,14 @@ export interface SorterCandidate {
 
 export function selectSorterCandidate(
   nodes: NodeDoc[],
-  edges: EdgeDoc[]
+  edges: EdgeDoc[],
+  opts?: { poolNodeIds?: Set<string> }
 ): SorterCandidate | null {
-  const activeNodeIds = new Set(nodes.filter((n) => !n.archived).map((n) => n.id));
+  const activeNodeIds = new Set(
+    nodes
+      .filter((n) => !n.archived && (!opts?.poolNodeIds || opts.poolNodeIds.has(n.id)))
+      .map((n) => n.id)
+  );
 
   // Build parent -> children map (only parent-child edges, active nodes only)
   const parentToChildren = new Map<string, Set<string>>();

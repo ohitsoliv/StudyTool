@@ -1,6 +1,8 @@
 // src/scripts/seedGraph.ts
 import { Timestamp } from 'firebase/firestore';
 import { getUserId, createGraph, createNode, createEdge } from '../services/storage';
+import type { EdgeType } from '../types/graph';
+import lgbtqIdentityVocabulary from './seedData/lgbtqIdentityVocabulary.json';
 
 export async function seedGraph(): Promise<void> {
   const userId = getUserId();
@@ -267,4 +269,82 @@ export async function seedLinearAlgebra(): Promise<void> {
     createEdge(userId, graphId, { source: matrixId,       target: linearTransId,   type: 'sequence' }),
     createEdge(userId, graphId, { source: linearTransId,  target: eigentheoryId,   type: 'sequence' }),
   ]);
+}
+
+type SeedLayer = {
+  depth: number;
+  content: string;
+  contentType: 'text' | 'code' | 'math';
+  createdAt: string;
+  language?: string;
+  brokenVersion?: string;
+};
+
+type SeedNode = {
+  id: string;
+  title: string;
+  position: { x: number; y: number };
+  layers: SeedLayer[];
+  tags: string[];
+  mastery: { score: number; reviewCount: number };
+  archived: boolean;
+  clusterId: string | null;
+  accessCount: number;
+};
+
+type SeedEdge = {
+  source: string;
+  target: string;
+  type: EdgeType;
+  label?: string;
+};
+
+export async function seedLgbtqIdentityVocabulary(): Promise<void> {
+  const seed = lgbtqIdentityVocabulary as {
+    metadata: { name: string };
+    nodes: SeedNode[];
+    edges: SeedEdge[];
+  };
+
+  const userId = getUserId();
+  const graphId = await createGraph(userId, seed.metadata.name);
+  const nodeMap = new Map<string, string>();
+
+  for (const node of seed.nodes) {
+    const createdNodeId = await createNode(userId, graphId, {
+      title: node.title,
+      position: node.position,
+      layers: node.layers.map((layer) => ({
+        depth: layer.depth,
+        content: layer.content,
+        contentType: layer.contentType,
+        createdAt: Timestamp.fromDate(new Date(layer.createdAt)),
+        ...(layer.language ? { language: layer.language } : {}),
+        ...(layer.brokenVersion ? { brokenVersion: layer.brokenVersion } : {}),
+      })),
+      tags: node.tags,
+      mastery: {
+        score: node.mastery.score,
+        lastReviewedAt: null,
+        reviewCount: node.mastery.reviewCount,
+      },
+      archived: node.archived,
+      clusterId: node.clusterId,
+      accessCount: node.accessCount,
+      lastAccessedAt: null,
+    });
+    nodeMap.set(node.id, createdNodeId);
+  }
+
+  for (const edge of seed.edges) {
+    const source = nodeMap.get(edge.source);
+    const target = nodeMap.get(edge.target);
+    if (!source || !target) continue;
+    await createEdge(userId, graphId, {
+      source,
+      target,
+      type: edge.type,
+      ...(edge.label ? { label: edge.label } : {}),
+    });
+  }
 }

@@ -1,6 +1,7 @@
 import { useUserPrefsStore } from '../../store/userPrefsStore';
 import { useGraphStore } from '../../store/graphStore';
 import { useDrillStore } from '../../store/drillStore';
+import { useSessionStore } from '../../store/sessionStore';
 import {
   canCloze,
   canDebuggerNode,
@@ -79,6 +80,7 @@ export default function FocusPicker() {
   const startSorter = useDrillStore((s) => s.startSorter);
   const startScenarioBuilder = useDrillStore((s) => s.startScenarioBuilder);
   const startDebugger = useDrillStore((s) => s.startDebugger);
+  const openSessionModal = useSessionStore((s) => s.openModal);
 
   const memorizer: DrillEntry[] = [];
   if (selectedNode) {
@@ -174,6 +176,28 @@ export default function FocusPicker() {
             ? `Drills for ${selectedNode.title || 'selected node'} surface first.`
             : 'Select a node first if you want a node-targeted drill.'}
         </p>
+
+        <div style={{ marginBottom: 16 }}>
+          <button
+            type="button"
+            onClick={openSessionModal}
+            style={{
+              width: '100%',
+              background: 'var(--panel-bg)',
+              color: 'var(--text)',
+              border: '1px solid var(--accent)',
+              borderRadius: 8,
+              padding: '10px 12px',
+              cursor: 'pointer',
+              textAlign: 'center',
+              fontFamily: 'inherit',
+              fontSize: 14,
+              fontWeight: 600,
+            }}
+          >
+            Start a session
+          </button>
+        </div>
 
         <div
           style={{
