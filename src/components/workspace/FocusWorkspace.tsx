@@ -1,5 +1,6 @@
 ﻿import { useEffect, useRef, useState } from 'react';
 import type { CSSProperties, KeyboardEvent } from 'react';
+import Editor from '@monaco-editor/react';
 import { useDrillStore } from '../../store/drillStore';
 import { useGraphStore } from '../../store/graphStore';
 import { useViewStore } from '../../store/viewStore';
@@ -200,12 +201,18 @@ export default function FocusWorkspace() {
   const submitScenarioBuilder = useDrillStore((s) => s.submitScenarioBuilder);
   const gradeScenarioBuilder = useDrillStore((s) => s.gradeScenarioBuilder);
   const startScenarioBuilder = useDrillStore((s) => s.startScenarioBuilder);
+  const startDebugger = useDrillStore((s) => s.startDebugger);
+  const setDebuggerInput = useDrillStore((s) => s.setDebuggerInput);
+  const submitDebugger = useDrillStore((s) => s.submitDebugger);
+  const giveUpDebugger = useDrillStore((s) => s.giveUpDebugger);
 
   const nodes = useGraphStore((s) => s.nodes);
+  const edges = useGraphStore((s) => s.edges);
   const setViewMode = useViewStore((s) => s.setViewMode);
 
   const [lastInvalidId, setLastInvalidId] = useState<string | null>(null);
   const invalidTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const [expandedNeighborId, setExpandedNeighborId] = useState<string | null>(null);
 
   useEffect(() => {
     return () => {
@@ -302,6 +309,10 @@ export default function FocusWorkspace() {
     : null;
   const headerLabel = (() => {
     if (currentDrill?.kind === 'scenario-builder') return 'Scenario Builder';
+    if (currentDrill?.kind === 'debugger') {
+      const n = nodes.find((x) => x.id === currentDrill.nodeId);
+      return `${n?.title ?? 'Node'} (Debugger) — Layer ${currentDrill.layerDepth}`;
+    }
     if (activeCloze) return clozeNode?.title ?? 'Memorizer';
     if (gradedCloze)
       return nodes.find((n) => n.id === gradedCloze.drill.nodeId)?.title ?? 'Memorizer';
@@ -883,6 +894,159 @@ export default function FocusWorkspace() {
             </div>
           </>
         )}
+
+        {/* ============ ACTIVE: DEBUGGER ============ */}
+        {phase === 'active' && currentDrill?.kind === 'debugger' && (() => {
+          const drill = currentDrill;
+          const neighborIds = new Set<string>();
+          for (const e of edges) {
+            if (e.source === drill.nodeId) neighborIds.add(e.target);
+            if (e.target === drill.nodeId) neighborIds.add(e.source);
+          }
+          const neighborNodes = nodes.filter((n) => neighborIds.has(n.id) && !n.archived);
+
+          return (
+            <div style={{ display: 'flex', width: '100%', height: '100%', gap: 0 }}>
+              {/* Main editor column */}
+              <div style={{ flex: 1, display: 'flex', flexDirection: 'column', padding: '16px 20px', minWidth: 0 }}>
+                <div style={{ fontSize: 13, color: 'var(--text-muted)', marginBottom: 12 }}>
+                  Fix the broken version below so it matches the canonical content.
+                </div>
+                <div style={{ flex: 1, minHeight: 0, marginBottom: 16 }}>
+                  {drill.contentType === 'code' ? (
+                    <div style={{ border: '1px solid var(--panel-border)', borderRadius: 6, overflow: 'hidden', height: '100%' }}>
+                      <Editor
+                        height="100%"
+                        theme="vs-dark"
+                        language={drill.language ?? 'plaintext'}
+                        value={drill.input}
+                        onChange={(value) => setDebuggerInput(value ?? '')}
+                        options={{
+                          minimap: { enabled: false },
+                          fontSize: 13,
+                          wordWrap: 'on',
+                          padding: { top: 10, bottom: 10 },
+                          scrollBeyondLastLine: false,
+                        }}
+                      />
+                    </div>
+                  ) : (
+                    <textarea
+                      value={drill.input}
+                      onChange={(e) => setDebuggerInput(e.target.value)}
+                      style={{
+                        width: '100%',
+                        height: '100%',
+                        resize: 'none',
+                        background: '#0f0f12',
+                        border: '1px solid var(--panel-border)',
+                        color: 'var(--text)',
+                        borderRadius: 6,
+                        padding: 10,
+                        fontFamily: 'monospace',
+                        fontSize: 13,
+                        outline: 'none',
+                        boxSizing: 'border-box',
+                      }}
+                    />
+                  )}
+                </div>
+                <div style={{ display: 'flex', gap: 10, flexShrink: 0 }}>
+                  <button onClick={submitDebugger} style={primaryBtnStyle}>Submit</button>
+                  <button onClick={giveUpDebugger} style={secondaryBtnStyle}>Give Up</button>
+                  <button onClick={dismiss} style={secondaryBtnStyle}>Cancel</button>
+                </div>
+              </div>
+
+              {/* Neighbor side panel */}
+              <div style={{
+                width: 280,
+                flexShrink: 0,
+                borderLeft: '1px solid var(--panel-border)',
+                display: 'flex',
+                flexDirection: 'column',
+                overflowY: 'auto',
+              }}>
+                <div style={{ padding: '12px 14px 8px', fontSize: 11, color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.08em', flexShrink: 0 }}>
+                  Connected nodes
+                </div>
+                {neighborNodes.length === 0 && (
+                  <div style={{ padding: '8px 14px', fontSize: 13, color: 'var(--text-muted)', fontStyle: 'italic' }}>
+                    No connected neighbors.
+                  </div>
+                )}
+                {neighborNodes.map((nb) => {
+                  const preview = nb.layers[0]?.content.slice(0, 80) ?? '';
+                  const isOpen = expandedNeighborId === nb.id;
+                  return (
+                    <div key={nb.id} style={{ borderBottom: '1px solid var(--panel-border)' }}>
+                      <button
+                        onClick={() => setExpandedNeighborId(isOpen ? null : nb.id)}
+                        style={{
+                          width: '100%',
+                          background: isOpen ? 'rgba(107,138,253,0.08)' : 'transparent',
+                          border: 'none',
+                          textAlign: 'left',
+                          padding: '10px 14px',
+                          cursor: 'pointer',
+                          color: 'var(--text)',
+                        }}
+                      >
+                        <div style={{ fontSize: 13, fontWeight: 500, marginBottom: 3 }}>{nb.title}</div>
+                        {!isOpen && (
+                          <div style={{ fontSize: 11, color: 'var(--text-muted)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                            {preview}
+                          </div>
+                        )}
+                      </button>
+                      {isOpen && (
+                        <div style={{ padding: '0 14px 12px', display: 'flex', flexDirection: 'column', gap: 8 }}>
+                          {nb.layers.map((l, li) => (
+                            <div key={li} style={{ fontSize: 11, background: '#0f0f12', border: '1px solid var(--panel-border)', borderRadius: 6, padding: 8 }}>
+                              <div style={{ color: 'var(--text-muted)', marginBottom: 4, textTransform: 'uppercase', letterSpacing: '0.06em' }}>
+                                Layer {l.depth} · {l.contentType}
+                              </div>
+                              <pre style={{ margin: 0, whiteSpace: 'pre-wrap', wordBreak: 'break-word', color: 'var(--text)', fontFamily: l.contentType === 'code' ? 'monospace' : 'inherit', fontSize: 11 }}>
+                                {l.content}
+                              </pre>
+                            </div>
+                          ))}
+                        </div>
+                      )}
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+          );
+        })()}
+
+        {/* ============ GRADED: DEBUGGER ============ */}
+        {phase === 'graded' && result?.drill.kind === 'debugger' && (() => {
+          const sim = result.similarity ?? 0;
+          const pct = Math.round(sim * 100);
+          const verdictColor = sim >= 0.99 ? '#5cb87a' : sim >= 0.80 ? '#c8963a' : '#c0504a';
+          const verdictLabel = sim >= 0.99 ? 'Excellent' : sim >= 0.80 ? 'Close' : 'Off track';
+          const deltaSign = (result.masteryDelta ?? 0) >= 0 ? '+' : '−';
+          const deltaAbs = Math.abs(result.masteryDelta ?? 0).toFixed(2);
+          return (
+            <div style={{ maxWidth: 600, width: '100%' }}>
+              <div style={{ fontSize: 26, fontWeight: 700, color: verdictColor, marginBottom: 12 }}>
+                {verdictLabel}
+              </div>
+              <div style={{ fontSize: 15, color: 'var(--text)', marginBottom: 6 }}>
+                Similarity: {pct}%
+              </div>
+              <div style={{ fontSize: 15, color: (result.masteryDelta ?? 0) >= 0 ? COLOR_OK : COLOR_BAD, marginBottom: 24 }}>
+                Mastery: {deltaSign}{deltaAbs}
+              </div>
+              <div style={{ display: 'flex', gap: 10 }}>
+                <button onClick={() => startDebugger()} style={primaryBtnStyle}>Pick another</button>
+                <button onClick={dismiss} style={secondaryBtnStyle}>Done</button>
+              </div>
+            </div>
+          );
+        })()}
       </div>
     </div>
   );

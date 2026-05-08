@@ -120,6 +120,16 @@ function StudyNode({ data, selected, id }: NodeProps<StudyNodeType>) {
     drillOutline = '1.5px solid var(--accent)';
   }
 
+  // Debugger subject highlight
+  const isDebuggerSubject =
+    phase === 'active' &&
+    currentDrill?.kind === 'debugger' &&
+    id === currentDrill.nodeId;
+  if (isDebuggerSubject) {
+    drillOutline = '2px solid var(--accent)';
+    drillBoxShadow = '0 0 0 4px rgba(107,138,253,0.25)';
+  }
+
   const containerStyle: React.CSSProperties = {
     maxWidth: 280,
     padding: '12px 16px',

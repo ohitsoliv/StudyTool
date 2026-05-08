@@ -33,8 +33,9 @@ Nexus Study Engine is a spatial knowledge graph for solo deep-learning. The user
 | Hotfix 9.x | Sidebar `<nav>` given `flex: 1`, `minHeight: 0`, `overflowY: auto` so it scrolls when drill buttons + graph list exceed panel height. |
 | Hotfix 9.y | Runtime check confirmed Scenario Builder action lookup issue came from stale runtime state; local hard-clean + fresh dev rebuild procedure established (`dist` + `node_modules/.vite` cleanup, hard refresh). |
 | Hotfix 9.z | Canonical disk sources reconciled with expected Packet 9 state: `src/store/drillStore.ts` now includes all 8 Scenario Builder actions on the actual returned Zustand object, and `src/types/drill.ts` includes `ScenarioBuilderDrill` + scenario result fields (`verdict`, `problemStatement`, `pipeline`, `nodesAffected`). |
+| Packet 9.5 | **Practitioner Lens: The Debugger.** Added `brokenVersion?: string` to `Layer` type (code/math only). New `src/utils/debugDiff.ts` with `normalize()` (whitespace-collapse, trim) and `similarity()` (Levenshtein-based, [0,1]). New `DebuggerDrill` type added to `drill.ts` union; `DrillResult` extended with `similarity`, `nodeId`, `layerDepth` fields. `drillStore` extended with `startDebugger` (random or targeted pick of eligible code/math layer with non-empty `brokenVersion`), `setDebuggerInput`, `submitDebugger` (scores via similarity: ≥0.99→+0.10 / ≥0.80→+0.05 / ≥0.50→0 / else−0.10), `giveUpDebugger` (−0.10); `dismiss` updated to reset view mode. `StudyNode` highlights the subject node (accent outline + glow) during active debugger. `FocusWorkspace` renders active state (Monaco or textarea editor bound to `input`, right side panel listing edge-connected neighbors with expand-on-click read-only layers) and graded state (similarity %, mastery delta, Pick another / Done). `LayerCard` in Inspector gains a collapsible "Broken version" section for code/math layers (mirrored editor type, blur-to-commit) and a "Debug this layer" button. Sidebar gains a Debugger button with 3s inline error when no eligible layers exist. |
 
-**Next: Packet 10 — Practitioner Lens: AI Ingestion (BYO-AI).**
+**Next: Packet 10 — Cloud Sync.**
 
 ---
 

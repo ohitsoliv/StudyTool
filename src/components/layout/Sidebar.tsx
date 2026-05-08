@@ -23,6 +23,7 @@ export default function Sidebar(): JSX.Element {
   const [clusterTitleUnavailable, setClusterTitleUnavailable] = useState(false);
   const [sorterUnavailable, setSorterUnavailable] = useState(false);
   const [scenarioBuilderUnavailable, setScenarioBuilderUnavailable] = useState(false);
+  const [debuggerUnavailable, setDebuggerUnavailable] = useState(false);
   const [creatingGraph, setCreatingGraph] = useState(false);
   const [newGraphName, setNewGraphName] = useState('');
 
@@ -55,6 +56,12 @@ export default function Sidebar(): JSX.Element {
     const t = setTimeout(() => setScenarioBuilderUnavailable(false), 3000);
     return () => clearTimeout(t);
   }, [scenarioBuilderUnavailable]);
+
+  useEffect(() => {
+    if (!debuggerUnavailable) return;
+    const t = setTimeout(() => setDebuggerUnavailable(false), 3000);
+    return () => clearTimeout(t);
+  }, [debuggerUnavailable]);
 
   const fetchGraphs = async (): Promise<void> => {
     const result = await listGraphs(getUserId());
@@ -400,6 +407,47 @@ export default function Sidebar(): JSX.Element {
             {scenarioBuilderUnavailable && (
               <div style={{ fontSize: 12, color: 'var(--text-muted)', marginTop: 6 }}>
                 Need at least 3 nodes.
+              </div>
+            )}
+
+            <button
+              type="button"
+              onClick={() => {
+                const { nodes: ns } = useGraphStore.getState();
+                const eligible = ns.some((n) =>
+                  !n.archived &&
+                  n.layers.some(
+                    (l) =>
+                      (l.contentType === 'code' || l.contentType === 'math') &&
+                      l.brokenVersion && l.brokenVersion.trim().length > 0 &&
+                      l.content && l.content.trim().length > 0
+                  )
+                );
+                if (!eligible) {
+                  setDebuggerUnavailable(true);
+                } else {
+                  useDrillStore.getState().startDebugger();
+                }
+              }}
+              style={{
+                width: '100%',
+                background: 'var(--accent)',
+                color: '#fff',
+                border: 'none',
+                borderRadius: 6,
+                padding: '8px',
+                cursor: 'pointer',
+                fontSize: 14,
+                fontWeight: 500,
+                fontFamily: 'inherit',
+                marginTop: 6,
+              }}
+            >
+              Debugger
+            </button>
+            {debuggerUnavailable && (
+              <div style={{ fontSize: 12, color: 'var(--text-muted)', marginTop: 6 }}>
+                No layers with a broken version.
               </div>
             )}
           </div>

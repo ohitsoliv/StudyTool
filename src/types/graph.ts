@@ -10,6 +10,7 @@ export interface Layer {
   contentType: ContentType;
   language?: string;
   createdAt: Timestamp;
+  brokenVersion?: string;  // only meaningful for code/math layers
 }
 
 export interface Mastery {

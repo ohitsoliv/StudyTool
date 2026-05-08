@@ -9,15 +9,19 @@ import { useDrillStore } from '../../store/drillStore';
 import type { Layer, EdgeDoc, EdgeType } from "../../types/graph";
 
 interface LayerCardProps {
+  nodeId: string;
   layer: Layer;
   index: number;
   onPatch: (patch: Partial<Layer>) => void;
 }
 
-function LayerCard({ layer, index, onPatch }: LayerCardProps): JSX.Element {
+function LayerCard({ nodeId, layer, index, onPatch }: LayerCardProps): JSX.Element {
   const [localContent, setLocalContent] = useState(layer.content);
   const [localLang, setLocalLang] = useState(layer.language ?? "c");
+  const [localBroken, setLocalBroken] = useState(layer.brokenVersion ?? "");
+  const [brokenOpen, setBrokenOpen] = useState(!!(layer.brokenVersion && layer.brokenVersion.trim().length > 0));
   const contentRef = useRef(localContent);
+  const brokenRef = useRef(localBroken);
 
   useEffect(() => {
     setLocalContent(layer.content);
@@ -28,8 +32,16 @@ function LayerCard({ layer, index, onPatch }: LayerCardProps): JSX.Element {
   }, [layer.language]);
 
   useEffect(() => {
+    setLocalBroken(layer.brokenVersion ?? "");
+  }, [layer.brokenVersion]);
+
+  useEffect(() => {
     contentRef.current = localContent;
   }, [localContent]);
+
+  useEffect(() => {
+    brokenRef.current = localBroken;
+  }, [localBroken]);
 
   const flush = (nextContent: string): void => {
     if (nextContent !== layer.content) {
@@ -37,9 +49,20 @@ function LayerCard({ layer, index, onPatch }: LayerCardProps): JSX.Element {
     }
   };
 
+  const flushBroken = (nextBroken: string): void => {
+    if (nextBroken !== (layer.brokenVersion ?? "")) {
+      onPatch({ brokenVersion: nextBroken });
+    }
+  };
+
   const handleContentChange = (value: string): void => {
     setLocalContent(value);
   };
+
+  const canDebug =
+    (layer.contentType === 'code' || layer.contentType === 'math') &&
+    layer.content.trim().length > 0 &&
+    (layer.brokenVersion ?? '').trim().length > 0;
 
   const unsaved = localContent !== layer.content;
 
@@ -133,6 +156,94 @@ function LayerCard({ layer, index, onPatch }: LayerCardProps): JSX.Element {
             padding: 8,
           }}
         />
+      )}
+
+      {/* Broken version section — only for code/math layers */}
+      {(layer.contentType === "code" || layer.contentType === "math") && (
+        <div>
+          <button
+            onClick={() => setBrokenOpen((v) => !v)}
+            style={{
+              background: "transparent",
+              border: "none",
+              color: "var(--text-muted)",
+              cursor: "pointer",
+              fontSize: 11,
+              padding: "4px 0",
+              display: "flex",
+              alignItems: "center",
+              gap: 4,
+            }}
+          >
+            <span style={{ fontSize: 10 }}>{brokenOpen ? "▾" : "▸"}</span>
+            Broken version {localBroken.trim().length > 0 ? "●" : ""}
+          </button>
+
+          {brokenOpen && (
+            <div style={{ marginTop: 6, display: "flex", flexDirection: "column", gap: 6 }}>
+              {layer.contentType === "code" ? (
+                <div style={{ border: "1px solid var(--panel-border)", borderRadius: 6, overflow: "hidden" }}>
+                  <Editor
+                    height="140px"
+                    theme="vs-dark"
+                    language={localLang || "c"}
+                    value={localBroken}
+                    onChange={(value) => setLocalBroken(value ?? "")}
+                    onMount={(editor) => {
+                      editor.onDidBlurEditorWidget(() => flushBroken(brokenRef.current));
+                    }}
+                    options={{
+                      minimap: { enabled: false },
+                      fontSize: 12,
+                      lineNumbers: "off",
+                      wordWrap: "on",
+                      padding: { top: 8, bottom: 8 },
+                    }}
+                  />
+                </div>
+              ) : (
+                <textarea
+                  value={localBroken}
+                  onChange={(e) => setLocalBroken(e.target.value)}
+                  onBlur={() => flushBroken(localBroken)}
+                  rows={4}
+                  placeholder="Paste a buggy/incomplete version here…"
+                  style={{
+                    width: "100%",
+                    resize: "vertical",
+                    background: "#0f0f12",
+                    border: "1px solid var(--panel-border)",
+                    color: "var(--text)",
+                    borderRadius: 6,
+                    padding: 8,
+                  }}
+                />
+              )}
+
+              <button
+                type="button"
+                disabled={!canDebug}
+                onClick={() => {
+                  if (!canDebug) return;
+                  useDrillStore.getState().startDebugger({ nodeId, layerDepth: layer.depth });
+                }}
+                style={{
+                  background: canDebug ? 'var(--accent)' : 'transparent',
+                  color: canDebug ? '#fff' : 'var(--text-muted)',
+                  border: canDebug ? 'none' : '1px solid var(--panel-border)',
+                  borderRadius: 6,
+                  padding: '6px 10px',
+                  cursor: canDebug ? 'pointer' : 'not-allowed',
+                  fontSize: 12,
+                  fontFamily: 'inherit',
+                  opacity: canDebug ? 1 : 0.6,
+                }}
+              >
+                Debug this layer
+              </button>
+            </div>
+          )}
+        </div>
       )}
     </section>
   );
@@ -400,6 +511,7 @@ export default function Inspector(): JSX.Element {
                   {node.layers.map((layer, index) => (
                     <LayerCard
                       key={`${node.id}-${layer.depth}-${index}`}
+                      nodeId={node.id}
                       layer={layer}
                       index={index}
                       onPatch={(patch) => patchLayer(index, patch)}
