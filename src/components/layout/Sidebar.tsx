@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 import { PanelLeft } from "lucide-react";
 import { useGraphStore } from "../../store/graphStore";
 import { GraphMetadata } from "../../types/graph";
-import { seedGraph } from "../../scripts/seedGraph";
+import { seedGraph, seedLinearAlgebra } from "../../scripts/seedGraph";
 import { useViewStore } from "../../store/viewStore";
 import { useDrillStore } from '../../store/drillStore';
 import {
@@ -96,6 +96,12 @@ export default function Sidebar(): JSX.Element {
   const handleSeed = async (): Promise<void> => {
     if (!confirm('Seed the database with "Embedded Systems Sandbox"?')) return;
     await seedGraph();
+    await fetchGraphs();
+  };
+
+  const handleSeedLA = async (): Promise<void> => {
+    if (!confirm('Seed the database with "Linear Algebra Sandbox"?')) return;
+    await seedLinearAlgebra();
     await fetchGraphs();
   };
 
@@ -475,6 +481,20 @@ export default function Sidebar(): JSX.Element {
             }}
           >
             Seed Database
+          </button>
+
+          <button
+            onClick={handleSeedLA}
+            style={{
+              cursor: "pointer",
+              border: "1px solid var(--panel-border)",
+              borderRadius: 6,
+              padding: "0.45rem 0.6rem",
+              textAlign: "left",
+              marginTop: 6,
+            }}
+          >
+            Seed Linear Algebra
           </button>
 
           <div style={{ marginTop: 12, fontSize: 11, color: 'var(--text-muted, #888)' }}>
