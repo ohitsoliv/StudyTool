@@ -255,43 +255,49 @@ function GraphCanvasInner() {
           label: 'Start a session...',
           onClick: () => useSessionStore.getState().openModal(),
         },
-        { separator: true },
-        { sectionLabel: 'START A DRILL' },
         {
-          label: 'Path Finder',
-          disabled: !pathFinderEligibility.eligible,
-          title: pathFinderEligibility.reason,
-          onClick: () => useDrillStore.getState().startPathFinder(),
-        },
-        {
-          label: 'Missing Link',
-          disabled: !missingLinkEligibility.eligible,
-          title: missingLinkEligibility.reason,
-          onClick: () => useDrillStore.getState().startMissingLink(menuNodes, menuEdges),
-        },
-        {
-          label: 'Cluster Title',
-          disabled: !clusterTitleEligibility.eligible,
-          title: clusterTitleEligibility.reason,
-          onClick: () => useDrillStore.getState().startClusterTitle(menuNodes, menuEdges),
-        },
-        {
-          label: 'Sorter',
-          disabled: !sorterEligibility.eligible,
-          title: sorterEligibility.reason,
-          onClick: () => useDrillStore.getState().startSorter(menuNodes, menuEdges),
-        },
-        {
-          label: 'Scenario Builder',
-          disabled: !scenarioEligibility.eligible,
-          title: scenarioEligibility.reason,
-          onClick: () => useDrillStore.getState().startScenarioBuilder(),
-        },
-        {
-          label: 'Debugger (random)',
-          disabled: !debuggerEligibility.eligible,
-          title: debuggerEligibility.reason,
-          onClick: () => useDrillStore.getState().startDebugger(),
+          label: 'Start a drill',
+          submenu: [
+            {
+              label: 'Path Finder',
+              disabled: !pathFinderEligibility.eligible,
+              title: pathFinderEligibility.reason,
+              onClick: () => useDrillStore.getState().startPathFinder(),
+            },
+            {
+              label: 'Missing Link',
+              disabled: !missingLinkEligibility.eligible,
+              title: missingLinkEligibility.reason,
+              onClick: () =>
+                useDrillStore.getState().startMissingLink(menuNodes, menuEdges),
+            },
+            {
+              label: 'Cluster Title',
+              disabled: !clusterTitleEligibility.eligible,
+              title: clusterTitleEligibility.reason,
+              onClick: () =>
+                useDrillStore.getState().startClusterTitle(menuNodes, menuEdges),
+            },
+            {
+              label: 'Sorter',
+              disabled: !sorterEligibility.eligible,
+              title: sorterEligibility.reason,
+              onClick: () =>
+                useDrillStore.getState().startSorter(menuNodes, menuEdges),
+            },
+            {
+              label: 'Scenario Builder',
+              disabled: !scenarioEligibility.eligible,
+              title: scenarioEligibility.reason,
+              onClick: () => useDrillStore.getState().startScenarioBuilder(),
+            },
+            {
+              label: 'Debugger (random)',
+              disabled: !debuggerEligibility.eligible,
+              title: debuggerEligibility.reason,
+              onClick: () => useDrillStore.getState().startDebugger(),
+            },
+          ],
         },
         { separator: true },
         {
@@ -331,18 +337,29 @@ function GraphCanvasInner() {
       const debuggerEligibility = canDebuggerNode(node);
 
       return [
-        { sectionLabel: 'STUDY THIS NODE' },
         {
-          label: 'Cloze',
-          disabled: !clozeEligibility.eligible,
-          title: clozeEligibility.reason,
-          onClick: () => useDrillStore.getState().startCloze(node),
-        },
-        {
-          label: 'Debugger',
-          disabled: !debuggerEligibility.eligible,
-          title: debuggerEligibility.reason,
-          onClick: () => useDrillStore.getState().startDebugger({ nodeId: node.id }),
+          label: 'Study this node',
+          submenu: [
+            {
+              label: 'Cloze',
+              disabled: !clozeEligibility.eligible,
+              title: clozeEligibility.reason,
+              onClick: () => useDrillStore.getState().startCloze(node),
+            },
+            {
+              label: 'Debugger',
+              disabled: !debuggerEligibility.eligible,
+              title: debuggerEligibility.reason,
+              onClick: () =>
+                useDrillStore.getState().startDebugger({ nodeId: node.id }),
+            },
+          ],
+          disabled:
+            !clozeEligibility.eligible && !debuggerEligibility.eligible,
+          title:
+            !clozeEligibility.eligible && !debuggerEligibility.eligible
+              ? 'No eligible drills for this node'
+              : undefined,
         },
         { separator: true },
         { label: 'Edit', onClick: () => selectNode(nodeId) },

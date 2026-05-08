@@ -1,3 +1,37 @@
+## Packet 11d — Drill-menu Submenus
+
+**Summary:**
+Packet 11d introduces submenu support for the canvas context menus, consolidating multiple drill options under a single parent menu item. This improves usability by reducing visual clutter and grouping related actions logically.
+
+**Changes:**
+- **Pane Menu:**
+  - Added a `Start a drill ▸` submenu containing:
+    - Path Finder
+    - Missing Link
+    - Cluster Title
+    - Sorter
+    - Scenario Builder
+    - Debugger (random)
+- **Node Menu:**
+  - Added a `Study this node ▸` submenu containing:
+    - Cloze
+    - Debugger
+  - Parent menu item disables when no eligible drills are available, with a tooltip explaining why.
+
+**Verification:**
+- Submenus open on hover with a 120ms delay.
+- Disabled items show tooltips explaining ineligibility.
+- Submenus flip direction to avoid viewport overflow.
+- Esc and outside-click close all menus.
+
+**Status:**
+- Build: Clean.
+- Dev server: Functional.
+- Manual smoke tests: Passed.
+
+**Next Steps:**
+- Replace `window.confirm()` in delete handlers (future packet).
+- Extend session submenus (future packet).
 <!-- Auto-generated technical README. Regenerate when major architecture changes ship. -->
 
 # Nexus Study Engine
