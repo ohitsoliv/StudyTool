@@ -158,8 +158,11 @@ function GraphCanvasInner() {
   );
 
   const onEdgeClick = useCallback(
-    (_e: React.MouseEvent, edge: Edge) => selectEdge(edge.id),
-    [selectEdge]
+    (_e: React.MouseEvent, edge: Edge) => {
+      if (drillPhase === 'active' && currentDrill !== null) return;
+      selectEdge(edge.id);
+    },
+    [selectEdge, drillPhase, currentDrill]
   );
 
   const onPaneClick = useCallback(() => {

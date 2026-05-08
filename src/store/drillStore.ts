@@ -514,5 +514,120 @@ export const useDrillStore = create<DrillStoreState>((set, get) => ({
       },
     });
   },
+
+  startDebugger: (opts) => {
+    const { nodes } = useGraphStore.getState();
+
+    type Candidate = {
+      nodeId: string;
+      layerDepth: number;
+      layer: import('../types/graph').Layer;
+    };
+
+    const candidates: Candidate[] = [];
+    for (const node of nodes) {
+      if (node.archived) continue;
+      for (const layer of node.layers) {
+        if (
+          (layer.contentType === 'code' || layer.contentType === 'math') &&
+          layer.brokenVersion && layer.brokenVersion.trim().length > 0 &&
+          layer.content && layer.content.trim().length > 0
+        ) {
+          candidates.push({ nodeId: node.id, layerDepth: layer.depth, layer });
+        }
+      }
+    }
+
+    let chosen: Candidate | undefined;
+    if (opts?.nodeId !== undefined || opts?.layerDepth !== undefined) {
+      chosen = candidates.find(
+        (candidate) =>
+          (opts.nodeId === undefined || candidate.nodeId === opts.nodeId) &&
+          (opts.layerDepth === undefined || candidate.layerDepth === opts.layerDepth)
+      );
+    } else if (candidates.length > 0) {
+      chosen = candidates[Math.floor(Math.random() * candidates.length)];
+    }
+
+    if (!chosen) return;
+
+    const drill: DebuggerDrill = {
+      kind: 'debugger',
+      nodeId: chosen.nodeId,
+      layerDepth: chosen.layerDepth,
+      contentType: chosen.layer.contentType as 'code' | 'math',
+      language: chosen.layer.language,
+      canonical: chosen.layer.content,
+      brokenVersion: chosen.layer.brokenVersion,
+      input: chosen.layer.brokenVersion,
+    };
+
+    set({ currentDrill: drill, result: null, phase: 'active' });
+    useViewStore.getState().setViewMode('focus');
+    void markAccessed([chosen.nodeId]);
+  },
+
+  setDebuggerInput: (text) => {
+    const drill = get().currentDrill;
+    if (!drill || drill.kind !== 'debugger' || get().phase !== 'active') return;
+    set({ currentDrill: { ...drill, input: text } });
+  },
+
+  submitDebugger: () => {
+    const drill = get().currentDrill;
+    if (!drill || drill.kind !== 'debugger' || get().phase !== 'active') return;
+
+    const sim = similarity(drill.canonical, drill.input);
+    const masteryDelta = sim >= 0.99 ? 0.10 : sim >= 0.80 ? 0.05 : sim >= 0.50 ? 0 : -0.10;
+
+    const node = useGraphStore.getState().nodes.find((n) => n.id === drill.nodeId);
+    if (node) {
+      const newScore = Math.min(1, Math.max(0, node.mastery.score + masteryDelta));
+      void useGraphStore.getState().updateNode(drill.nodeId, {
+        mastery: {
+          score: newScore,
+          lastReviewedAt: Timestamp.now(),
+          reviewCount: node.mastery.reviewCount + 1,
+        },
+      });
+    }
+
+    const result: DrillResult = {
+      drill,
+      score: sim,
+      masteryDelta,
+      similarity: sim,
+      nodeId: drill.nodeId,
+      layerDepth: drill.layerDepth,
+    };
+    set({ result, phase: 'graded' });
+  },
+
+  giveUpDebugger: () => {
+    const drill = get().currentDrill;
+    if (!drill || drill.kind !== 'debugger' || get().phase !== 'active') return;
+
+    const node = useGraphStore.getState().nodes.find((n) => n.id === drill.nodeId);
+    if (node) {
+      const newScore = Math.min(1, Math.max(0, node.mastery.score - 0.10));
+      void useGraphStore.getState().updateNode(drill.nodeId, {
+        mastery: {
+          score: newScore,
+          lastReviewedAt: Timestamp.now(),
+          reviewCount: node.mastery.reviewCount + 1,
+        },
+      });
+    }
+
+    const result: DrillResult = {
+      drill,
+      score: 0,
+      masteryDelta: -0.10,
+      similarity: 0,
+      nodeId: drill.nodeId,
+      layerDepth: drill.layerDepth,
+    };
+    set({ result, phase: 'graded' });
+  },
 }));
 

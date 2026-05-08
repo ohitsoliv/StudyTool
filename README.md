@@ -2,13 +2,24 @@
 
 # Nexus Study Engine
 
-**Last updated: 2026-05-07 (Hotfix 9.z)**
+**Last updated: 2026-05-07 (Hotfix 9.zzz � debugger disk fix; full runtime audit pass)**
 
 ---
 
 ## 1. Project Identity
 
 Nexus Study Engine is a spatial knowledge graph for solo deep-learning. The user (the student building it) maps concepts as nodes on a 2D canvas, draws typed edges between them, and annotates each node with layered content that is revealed progressively as zoom level increases — a Z-axis proxy for depth of detail. Each node carries a mastery score that drives a heatmap gradient on the node's left border: rusty red → burnt orange → forest green. The design codename "Nexus Study Engine" reflects a planned multi-modal study tool with three lenses (Memorize, Architect, Practise), BYO-AI ingestion (user's own Claude/GPT subscription, no platform API cost), and a graph-first mental model rather than flat flashcard decks. Nothing is public-facing; the project is a personal tool built by one person with AI-assisted code generation.
+
+---
+
+## Noted Problems
+
+Update this section every time this README is updated, even if the entry is just "none currently noted."
+
+- 2026-05-07: Verification pass completed with clean `npm run build` and no TypeScript errors, but not all drills were manually exercised end-to-end in UI.
+- 2026-05-07: Async drill completion handlers can apply mastery more than once if the user double-clicks before the awaited write finishes. Verified in `submitMissingLink`, `giveUpMissingLink`, `submitClusterTitle`, `giveUpClusterTitle`, `submitSorter`, `giveUpSorter`, and `gradeScenarioBuilder` in `src/store/drillStore.ts`.
+- 2026-05-07: Missing Link updates mastery after `createEdge(...)` without validating edge creation success beyond the awaited call, so a storage failure could leave mastery updated without the edge being persisted in `src/store/drillStore.ts`.
+- 2026-05-07: RESOLVED � Debugger drill actions (startDebugger, setDebuggerInput, submitDebugger, giveUpDebugger) and DebuggerDrill types were absent from the canonical on-disk `src/store/drillStore.ts` and `src/types/drill.ts`. Root cause: Packet 9.5 disk writes were never committed to those two files. PowerShell patches applied; build (1971 modules) and full runtime audit passed. Audit matrix: Cloze ?, Path Finder ?, Missing Link ?, Cluster Title ?, Sorter ?, Scenario Builder ?, Debugger ?.
 
 ---
 
@@ -33,6 +44,7 @@ Nexus Study Engine is a spatial knowledge graph for solo deep-learning. The user
 | Hotfix 9.x | Sidebar `<nav>` given `flex: 1`, `minHeight: 0`, `overflowY: auto` so it scrolls when drill buttons + graph list exceed panel height. |
 | Hotfix 9.y | Runtime check confirmed Scenario Builder action lookup issue came from stale runtime state; local hard-clean + fresh dev rebuild procedure established (`dist` + `node_modules/.vite` cleanup, hard refresh). |
 | Hotfix 9.z | Canonical disk sources reconciled with expected Packet 9 state: `src/store/drillStore.ts` now includes all 8 Scenario Builder actions on the actual returned Zustand object, and `src/types/drill.ts` includes `ScenarioBuilderDrill` + scenario result fields (`verdict`, `problemStatement`, `pipeline`, `nodesAffected`). |
+| Hotfix 9.zz | SB5 integrator fix: `GraphCanvas` now applies the active-drill edit lockout to edge-click selection as well, so active drills ignore edge selection just like edge-drag creation, Delete/Backspace, and non-drill node selection. |
 | Packet 9.5 | **Practitioner Lens: The Debugger.** Added `brokenVersion?: string` to `Layer` type (code/math only). New `src/utils/debugDiff.ts` with `normalize()` (whitespace-collapse, trim) and `similarity()` (Levenshtein-based, [0,1]). New `DebuggerDrill` type added to `drill.ts` union; `DrillResult` extended with `similarity`, `nodeId`, `layerDepth` fields. `drillStore` extended with `startDebugger` (random or targeted pick of eligible code/math layer with non-empty `brokenVersion`), `setDebuggerInput`, `submitDebugger` (scores via similarity: ≥0.99→+0.10 / ≥0.80→+0.05 / ≥0.50→0 / else−0.10), `giveUpDebugger` (−0.10); `dismiss` updated to reset view mode. `StudyNode` highlights the subject node (accent outline + glow) during active debugger. `FocusWorkspace` renders active state (Monaco or textarea editor bound to `input`, right side panel listing edge-connected neighbors with expand-on-click read-only layers) and graded state (similarity %, mastery delta, Pick another / Done). `LayerCard` in Inspector gains a collapsible "Broken version" section for code/math layers (mirrored editor type, blur-to-commit) and a "Debug this layer" button. Sidebar gains a Debugger button with 3s inline error when no eligible layers exist. |
 
 **Next: Packet 10 — Cloud Sync.**

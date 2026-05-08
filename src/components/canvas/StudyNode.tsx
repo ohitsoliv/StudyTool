@@ -50,13 +50,14 @@ function StudyNode({ data, selected, id }: NodeProps<StudyNodeType>) {
   let drillOutline: string | undefined;
   let drillBoxShadow: string | undefined;
   if (drillState === 'source') {
-    drillOutline = '2px solid #6b8afd';
-    drillBoxShadow = '0 0 0 4px rgba(107, 138, 253, 0.25)';
+    drillOutline = '3px solid #8ea7ff';
+    drillBoxShadow = '0 0 0 5px rgba(107, 138, 253, 0.35), 0 0 22px rgba(107, 138, 253, 0.45)';
   } else if (drillState === 'target') {
-    drillOutline = '2px solid #5a7a4a';
-    drillBoxShadow = '0 0 0 4px rgba(90, 122, 74, 0.25)';
+    drillOutline = '3px solid #79b460';
+    drillBoxShadow = '0 0 0 5px rgba(90, 122, 74, 0.35), 0 0 22px rgba(121, 180, 96, 0.4)';
   } else if (drillState === 'in-path') {
-    drillOutline = '2px dashed #d4924a';
+    drillOutline = '3px dashed #f0ad62';
+    drillBoxShadow = '0 0 0 4px rgba(212, 146, 74, 0.28), 0 0 16px rgba(212, 146, 74, 0.3)';
   }
 
   // Missing Link highlight

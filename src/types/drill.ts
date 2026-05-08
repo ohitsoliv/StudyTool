@@ -1,6 +1,6 @@
 import type { EdgeType } from './graph';
 
-export type DrillKind = 'cloze' | 'path-finder' | 'missing-link' | 'cluster-title' | 'sorter' | 'scenario-builder';
+export type DrillKind = 'cloze' | 'path-finder' | 'missing-link' | 'cluster-title' | 'sorter' | 'scenario-builder' | 'debugger';
 
 export interface ClozeBlank {
   index: number;
@@ -61,7 +61,18 @@ export interface ScenarioBuilderDrill {
   pipeline: string[];
   builderPhase: 'authoring' | 'building';
 }
-export type Drill = ClozeDrill | PathFinderDrill | MissingLinkDrill | ClusterTitleDrill | SorterDrill | ScenarioBuilderDrill;
+
+export interface DebuggerDrill {
+  kind: 'debugger';
+  nodeId: string;
+  layerDepth: number;
+  contentType: 'code' | 'math';
+  language?: string;
+  canonical: string;
+  brokenVersion: string;
+  input: string;
+}
+export type Drill = ClozeDrill | PathFinderDrill | MissingLinkDrill | ClusterTitleDrill | SorterDrill | ScenarioBuilderDrill | DebuggerDrill;
 
 export interface DrillResult {
   drill: Drill;
