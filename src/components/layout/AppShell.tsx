@@ -23,7 +23,20 @@ export default function AppShell(): JSX.Element {
       <Sidebar />
 
       <main style={{ overflow: "hidden", position: "relative" }}>
-        {viewMode === "canvas" ? <GraphCanvas /> : <FocusWorkspace />}
+        {viewMode === "canvas" ? (
+          <GraphCanvas />
+        ) : viewMode === "dual" ? (
+          <div style={{ display: "flex", width: "100%", height: "100%" }}>
+            <div style={{ flex: 1, minWidth: 0, borderRight: "1px solid var(--panel-border)" }}>
+              <GraphCanvas />
+            </div>
+            <div style={{ flex: 1, minWidth: 0 }}>
+              <FocusWorkspace />
+            </div>
+          </div>
+        ) : (
+          <FocusWorkspace />
+        )}
       </main>
 
       <Inspector />

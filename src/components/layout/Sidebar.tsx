@@ -18,6 +18,10 @@ export default function Sidebar(): JSX.Element {
   const [loading, setLoading] = useState(true);
   const { currentGraphId, setCurrentGraph } = useGraphStore();
   const [drillUnavailable, setDrillUnavailable] = useState(false);
+  const [missingLinkUnavailable, setMissingLinkUnavailable] = useState(false);
+  const [clusterTitleUnavailable, setClusterTitleUnavailable] = useState(false);
+  const [sorterUnavailable, setSorterUnavailable] = useState(false);
+  const [scenarioBuilderUnavailable, setScenarioBuilderUnavailable] = useState(false);
   const [creatingGraph, setCreatingGraph] = useState(false);
   const [newGraphName, setNewGraphName] = useState('');
 
@@ -26,6 +30,30 @@ export default function Sidebar(): JSX.Element {
     const t = setTimeout(() => setDrillUnavailable(false), 3000);
     return () => clearTimeout(t);
   }, [drillUnavailable]);
+
+  useEffect(() => {
+    if (!missingLinkUnavailable) return;
+    const t = setTimeout(() => setMissingLinkUnavailable(false), 3000);
+    return () => clearTimeout(t);
+  }, [missingLinkUnavailable]);
+
+  useEffect(() => {
+    if (!clusterTitleUnavailable) return;
+    const t = setTimeout(() => setClusterTitleUnavailable(false), 3000);
+    return () => clearTimeout(t);
+  }, [clusterTitleUnavailable]);
+
+  useEffect(() => {
+    if (!sorterUnavailable) return;
+    const t = setTimeout(() => setSorterUnavailable(false), 3000);
+    return () => clearTimeout(t);
+  }, [sorterUnavailable]);
+
+  useEffect(() => {
+    if (!scenarioBuilderUnavailable) return;
+    const t = setTimeout(() => setScenarioBuilderUnavailable(false), 3000);
+    return () => clearTimeout(t);
+  }, [scenarioBuilderUnavailable]);
 
   const fetchGraphs = async (): Promise<void> => {
     const result = await listGraphs(getUserId());
@@ -249,6 +277,125 @@ export default function Sidebar(): JSX.Element {
             {drillUnavailable && (
               <div style={{ fontSize: 12, color: 'var(--text-muted)', marginTop: 6 }}>
                 Need at least one connected pair (≥2 hops apart) in this graph.
+              </div>
+            )}
+
+            <button
+              type="button"
+              onClick={() => {
+                const { nodes: ns, edges: es } = useGraphStore.getState();
+                const ok = useDrillStore.getState().startMissingLink(ns, es);
+                if (!ok) setMissingLinkUnavailable(true);
+              }}
+              style={{
+                width: '100%',
+                background: 'var(--accent)',
+                color: '#fff',
+                border: 'none',
+                borderRadius: 6,
+                padding: '8px',
+                cursor: 'pointer',
+                fontSize: 14,
+                fontWeight: 500,
+                fontFamily: 'inherit',
+                marginTop: 6,
+              }}
+            >
+              Missing Link
+            </button>
+            {missingLinkUnavailable && (
+              <div style={{ fontSize: 12, color: 'var(--text-muted)', marginTop: 6 }}>
+                No eligible pairs — try after building more graph.
+              </div>
+            )}
+
+            <button
+              type="button"
+              onClick={() => {
+                const { nodes: ns, edges: es } = useGraphStore.getState();
+                const ok = useDrillStore.getState().startClusterTitle(ns, es);
+                if (!ok) setClusterTitleUnavailable(true);
+              }}
+              style={{
+                width: '100%',
+                background: 'var(--accent)',
+                color: '#fff',
+                border: 'none',
+                borderRadius: 6,
+                padding: '8px',
+                cursor: 'pointer',
+                fontSize: 14,
+                fontWeight: 500,
+                fontFamily: 'inherit',
+                marginTop: 6,
+              }}
+            >
+              Cluster Title
+            </button>
+            {clusterTitleUnavailable && (
+              <div style={{ fontSize: 12, color: 'var(--text-muted)', marginTop: 6 }}>
+                No parent has ≥2 children — build a hierarchy first.
+              </div>
+            )}
+
+            <button
+              type="button"
+              onClick={() => {
+                const { nodes: ns, edges: es } = useGraphStore.getState();
+                const ok = useDrillStore.getState().startSorter(ns, es);
+                if (!ok) setSorterUnavailable(true);
+              }}
+              style={{
+                width: '100%',
+                background: 'var(--accent)',
+                color: '#fff',
+                border: 'none',
+                borderRadius: 6,
+                padding: '8px',
+                cursor: 'pointer',
+                fontSize: 14,
+                fontWeight: 500,
+                fontFamily: 'inherit',
+                marginTop: 6,
+              }}
+            >
+              Sorter
+            </button>
+            {sorterUnavailable && (
+              <div style={{ fontSize: 12, color: 'var(--text-muted)', marginTop: 6 }}>
+                Need 2+ parents with multiple children — build more hierarchy first.
+              </div>
+            )}
+
+            <button
+              type="button"
+              onClick={() => {
+                const { nodes: ns } = useGraphStore.getState();
+                if (ns.length < 3) {
+                  setScenarioBuilderUnavailable(true);
+                } else {
+                  useDrillStore.getState().startScenarioBuilder();
+                }
+              }}
+              style={{
+                width: '100%',
+                background: 'var(--accent)',
+                color: '#fff',
+                border: 'none',
+                borderRadius: 6,
+                padding: '8px',
+                cursor: 'pointer',
+                fontSize: 14,
+                fontWeight: 500,
+                fontFamily: 'inherit',
+                marginTop: 6,
+              }}
+            >
+              Scenario Builder
+            </button>
+            {scenarioBuilderUnavailable && (
+              <div style={{ fontSize: 12, color: 'var(--text-muted)', marginTop: 6 }}>
+                Need at least 3 nodes.
               </div>
             )}
           </div>

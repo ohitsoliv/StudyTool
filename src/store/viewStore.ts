@@ -1,6 +1,6 @@
 import { create } from "zustand";
 
-type ViewMode = "canvas" | "focus";
+type ViewMode = "canvas" | "focus" | "dual";
 
 interface ViewState {
   viewMode: ViewMode;
@@ -9,7 +9,7 @@ interface ViewState {
   toggleViewMode: () => void;
   toggleSidebar: () => void;
   toggleInspector: () => void;
-  setViewMode: (mode: 'canvas' | 'focus') => void;
+  setViewMode: (mode: 'canvas' | 'focus' | 'dual') => void;
 }
 
 export const useViewStore = create<ViewState>((set) => ({

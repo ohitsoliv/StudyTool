@@ -59,6 +59,67 @@ function StudyNode({ data, selected, id }: NodeProps<StudyNodeType>) {
     drillOutline = '2px dashed #d4924a';
   }
 
+  // Missing Link highlight
+  const isMissingLinkNode =
+    phase === 'active' &&
+    currentDrill?.kind === 'missing-link' &&
+    (id === currentDrill.aId || id === currentDrill.bId);
+  if (isMissingLinkNode) {
+    drillOutline = '2px solid var(--accent)';
+    drillBoxShadow = '0 0 0 4px rgba(107,138,253,0.25)';
+  }
+
+  // Cluster Title highlight
+  const isClusterParent =
+    currentDrill?.kind === 'cluster-title' &&
+    phase === 'active' &&
+    id === currentDrill.parentId;
+  const isClusterChild =
+    currentDrill?.kind === 'cluster-title' &&
+    phase === 'active' &&
+    currentDrill.childIds.includes(id);
+  if (isClusterParent) {
+    drillOutline = '2px dashed var(--accent)';
+  } else if (isClusterChild) {
+    drillOutline = '2px solid rgba(107,138,253,0.45)';
+  }
+
+  // Sorter visual states
+  const isSorterParent =
+    currentDrill?.kind === 'sorter' &&
+    phase === 'active' &&
+    currentDrill.parentIds.includes(id);
+  const isSorterChild = currentDrill?.kind === 'sorter' && currentDrill.childIds.includes(id);
+  const sorterAssigned =
+    isSorterChild && currentDrill?.kind === 'sorter'
+      ? currentDrill.userAssignments[id] !== null
+      : false;
+  if (isSorterParent) {
+    drillOutline = '2px solid var(--accent)';
+    drillBoxShadow = '0 0 0 4px rgba(107,138,253,0.20)';
+  } else if (isSorterChild && phase === 'active') {
+    drillOutline = sorterAssigned ? '2px solid var(--accent)' : '2px dashed var(--text-muted)';
+  }
+
+  const sorterBadge =
+    currentDrill?.kind === 'sorter' && phase === 'graded' && isSorterChild
+      ? currentDrill.userAssignments[id] === currentDrill.truth[id]
+        ? '✓'
+        : '✗'
+      : null;
+  const sorterBadgeColor =
+    sorterBadge === '✓' ? '#5a7a4a' : '#c0504a';
+
+  // Scenario Builder visual states
+  const scenarioPipelineIndex =
+    (currentDrill?.kind === 'scenario-builder' &&
+      (phase === 'active' || phase === 'graded') &&
+      currentDrill.pipeline.indexOf(id)) ?? -1;
+  const isInPipeline = scenarioPipelineIndex !== -1 && scenarioPipelineIndex !== false && (scenarioPipelineIndex as number) >= 0;
+  if (isInPipeline) {
+    drillOutline = '1.5px solid var(--accent)';
+  }
+
   const containerStyle: React.CSSProperties = {
     maxWidth: 280,
     padding: '12px 16px',
@@ -131,7 +192,49 @@ function StudyNode({ data, selected, id }: NodeProps<StudyNodeType>) {
         }} />
       )}
 
-      <div style={titleStyle}>{title}</div>
+      {isMissingLinkNode && (
+        <div style={{
+          position: 'absolute',
+          top: 6,
+          right: 10,
+          fontSize: 12,
+          fontWeight: 700,
+          color: 'var(--accent)',
+          lineHeight: 1,
+        }}>?</div>
+      )}
+      {sorterBadge !== null && (
+        <div style={{
+          position: 'absolute',
+          bottom: 6,
+          right: 10,
+          fontSize: 13,
+          fontWeight: 700,
+          color: sorterBadgeColor,
+          lineHeight: 1,
+        }}>{sorterBadge}</div>
+      )}
+      {isInPipeline && (
+        <div style={{
+          position: 'absolute',
+          top: 6,
+          left: 10,
+          background: 'var(--accent)',
+          color: '#fff',
+          fontSize: 10,
+          fontWeight: 700,
+          borderRadius: '50%',
+          width: 16,
+          height: 16,
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          lineHeight: 1,
+        }}>{(scenarioPipelineIndex as number) + 1}</div>
+      )}
+      <div style={titleStyle}>
+        {isClusterParent && phase === 'active' ? '?' : title}
+      </div>
 
       {showLayer1 && (
         <div style={layer1.contentType === 'code' ? codeStyle : layerTextStyle}>

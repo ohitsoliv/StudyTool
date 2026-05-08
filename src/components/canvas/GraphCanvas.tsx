@@ -20,6 +20,9 @@ import StudyNode from './StudyNode';
 import { CanvasContextMenu, type MenuItem } from './CanvasContextMenu';
 import { applyEdgeVisual } from '../../utils/edgeStyles';
 import PathFinderOverlay from './PathFinderOverlay';
+import MissingLinkOverlay from './MissingLinkOverlay';
+import ClusterTitleOverlay from './ClusterTitleOverlay';
+import SorterOverlay from './SorterOverlay';
 
 const nodeTypes = { study: StudyNode };
 
@@ -38,6 +41,8 @@ function GraphCanvasInner() {
   const selectNode = useGraphStore((s) => s.selectNode);
   const selectEdge = useGraphStore((s) => s.selectEdge);
   const clickPathStep = useDrillStore((s) => s.clickPathStep);
+  const assignChild = useDrillStore((s) => s.assignChild);
+  const addToPipeline = useDrillStore((s) => s.addToPipeline);
   const drillPhase = useDrillStore((s) => s.phase);
   const currentDrill = useDrillStore((s) => s.currentDrill);
   const createNode = useGraphStore((s) => s.createNode);
@@ -70,9 +75,17 @@ function GraphCanvasInner() {
     [nodes, selectedNodeId, zoomLevel]
   );
 
-  const rfEdges: Edge[] = useMemo(
-    () =>
-      edges.map((e) => {
+  const rfEdges: Edge[] = useMemo(() => {
+    const isSorterActive = drillPhase === 'active' && currentDrill?.kind === 'sorter';
+    const sorterParentSet = isSorterActive ? new Set(currentDrill.parentIds) : null;
+    const sorterChildSet = isSorterActive ? new Set(currentDrill.childIds) : null;
+    return edges
+      .filter((e) => {
+        if (!isSorterActive || !sorterParentSet || !sorterChildSet) return true;
+        if (e.type === 'parent-child' && sorterParentSet.has(e.source) && sorterChildSet.has(e.target)) return false;
+        return true;
+      })
+      .map((e) => {
         const base: Edge = {
           id: e.id,
           source: e.source,
@@ -82,9 +95,8 @@ function GraphCanvasInner() {
           data: { type: e.type },
         };
         return applyEdgeVisual(base, e.type);
-      }),
-    [edges, selectedEdgeId]
-  );
+      });
+  }, [edges, selectedEdgeId, drillPhase, currentDrill]);
 
   const onNodesChange = useCallback((_c: NodeChange[]) => {}, []);
   const onEdgesChange = useCallback((_c: EdgeChange[]) => {}, []);
@@ -92,8 +104,26 @@ function GraphCanvasInner() {
   const onNodeDragStop = useCallback(
     (_e: React.MouseEvent | MouseEvent | TouchEvent, node: Node) => {
       updateNode(node.id, { position: node.position });
+      // Sorter proximity detection
+      if (drillPhase === 'active' && currentDrill?.kind === 'sorter' && currentDrill.childIds.includes(node.id)) {
+        const THRESHOLD = 200;
+        let closestParentId: string | null = null;
+        let closestDist = Infinity;
+        for (const parentId of currentDrill.parentIds) {
+          const parentNode = nodes.find((n) => n.id === parentId);
+          if (!parentNode) continue;
+          const dx = node.position.x - parentNode.position.x;
+          const dy = node.position.y - parentNode.position.y;
+          const dist = Math.sqrt(dx * dx + dy * dy);
+          if (dist < closestDist) {
+            closestDist = dist;
+            closestParentId = parentId;
+          }
+        }
+        assignChild(node.id, closestDist <= THRESHOLD ? closestParentId : null);
+      }
     },
-    [updateNode]
+    [updateNode, drillPhase, currentDrill, nodes, assignChild]
   );
 
   const onConnect = useCallback(
@@ -117,9 +147,14 @@ function GraphCanvasInner() {
         clickPathStep(node.id);
         return;
       }
+      if (drillPhase === 'active' && currentDrill?.kind === 'scenario-builder' && currentDrill.builderPhase === 'building') {
+        addToPipeline(node.id);
+        return;
+      }
+      if (drillPhase === 'active') return;
       selectNode(node.id);
     },
-    [selectNode, clickPathStep, drillPhase, currentDrill]
+    [selectNode, clickPathStep, addToPipeline, drillPhase, currentDrill]
   );
 
   const onEdgeClick = useCallback(
@@ -128,7 +163,7 @@ function GraphCanvasInner() {
   );
 
   const onPaneClick = useCallback(() => {
-    if (drillPhase === 'active' && currentDrill?.kind === 'path-finder') return;
+    if (drillPhase === 'active') return;
     selectNode(null);
     setMenu(null);
   }, [selectNode, drillPhase, currentDrill]);
@@ -342,6 +377,9 @@ function GraphCanvasInner() {
         <Controls />
       </ReactFlow>
       <PathFinderOverlay />
+      <MissingLinkOverlay />
+      <ClusterTitleOverlay />
+      <SorterOverlay />
       {menu && (
         <CanvasContextMenu
           x={menu.x}

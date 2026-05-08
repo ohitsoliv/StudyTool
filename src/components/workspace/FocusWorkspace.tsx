@@ -193,6 +193,13 @@ export default function FocusWorkspace() {
   const clickPathStep = useDrillStore((s) => s.clickPathStep);
   const giveUp = useDrillStore((s) => s.giveUp);
   const dismiss = useDrillStore((s) => s.dismiss);
+  const setProblemStatement = useDrillStore((s) => s.setProblemStatement);
+  const commitProblemStatement = useDrillStore((s) => s.commitProblemStatement);
+  const removeFromPipeline = useDrillStore((s) => s.removeFromPipeline);
+  const reorderPipeline = useDrillStore((s) => s.reorderPipeline);
+  const submitScenarioBuilder = useDrillStore((s) => s.submitScenarioBuilder);
+  const gradeScenarioBuilder = useDrillStore((s) => s.gradeScenarioBuilder);
+  const startScenarioBuilder = useDrillStore((s) => s.startScenarioBuilder);
 
   const nodes = useGraphStore((s) => s.nodes);
   const setViewMode = useViewStore((s) => s.setViewMode);
@@ -294,6 +301,7 @@ export default function FocusWorkspace() {
     ? nodes.find((n) => n.id === activeCloze.nodeId) ?? null
     : null;
   const headerLabel = (() => {
+    if (currentDrill?.kind === 'scenario-builder') return 'Scenario Builder';
     if (activeCloze) return clozeNode?.title ?? 'Memorizer';
     if (gradedCloze)
       return nodes.find((n) => n.id === gradedCloze.drill.nodeId)?.title ?? 'Memorizer';
@@ -670,6 +678,208 @@ export default function FocusWorkspace() {
               <button onClick={handleExit} style={secondaryBtnStyle}>
                 Done
               </button>
+            </div>
+          </>
+        )}
+
+        {/* ============ ACTIVE: SCENARIO BUILDER — AUTHORING ============ */}
+        {phase === 'active' && currentDrill?.kind === 'scenario-builder' && currentDrill.builderPhase === 'authoring' && (
+          <>
+            <div style={{ maxWidth: 600, width: '100%' }}>
+              <div style={{ fontSize: 14, color: 'var(--text-muted)', marginBottom: 16 }}>
+                Describe a problem or scenario, then assemble a pipeline of relevant nodes from your graph.
+              </div>
+              <textarea
+                value={currentDrill.problemStatement}
+                onChange={(e) => setProblemStatement(e.target.value)}
+                placeholder="e.g., Design a recommendation system that handles cold-start users."
+                autoFocus
+                rows={5}
+                style={{
+                  width: '100%',
+                  background: 'var(--panel-bg)',
+                  border: '1px solid var(--panel-border)',
+                  borderRadius: 6,
+                  color: 'var(--text)',
+                  fontSize: 14,
+                  padding: '10px 12px',
+                  resize: 'vertical',
+                  fontFamily: 'inherit',
+                  outline: 'none',
+                  boxSizing: 'border-box',
+                }}
+              />
+              <div style={{ fontSize: 12, color: 'var(--text-muted)', marginTop: 4 }}>
+                {currentDrill.problemStatement.trim().length} / 10 minimum
+              </div>
+              <div style={{ display: 'flex', gap: 10, marginTop: 16 }}>
+                <button
+                  onClick={commitProblemStatement}
+                  disabled={currentDrill.problemStatement.trim().length < 10}
+                  style={{
+                    ...primaryBtnStyle,
+                    opacity: currentDrill.problemStatement.trim().length >= 10 ? 1 : 0.45,
+                    cursor: currentDrill.problemStatement.trim().length >= 10 ? 'pointer' : 'not-allowed',
+                  }}
+                >
+                  Start
+                </button>
+                <button onClick={dismiss} style={secondaryBtnStyle}>Cancel</button>
+              </div>
+            </div>
+          </>
+        )}
+
+        {/* ============ ACTIVE: SCENARIO BUILDER — BUILDING ============ */}
+        {phase === 'active' && currentDrill?.kind === 'scenario-builder' && currentDrill.builderPhase === 'building' && (
+          <>
+            <div style={{ maxWidth: 600, width: '100%' }}>
+              <div style={{
+                background: 'var(--panel-bg)',
+                border: '1px solid var(--panel-border)',
+                borderLeft: '3px solid var(--accent)',
+                borderRadius: 6,
+                padding: '10px 14px',
+                fontSize: 14,
+                color: 'var(--text)',
+                marginBottom: 20,
+                fontStyle: 'italic',
+              }}>
+                {currentDrill.problemStatement}
+              </div>
+              <div style={{ fontSize: 12, color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: 10 }}>
+                Pipeline ({currentDrill.pipeline.length})
+              </div>
+              {currentDrill.pipeline.length === 0 ? (
+                <div style={{ fontSize: 13, color: 'var(--text-muted)', fontStyle: 'italic', marginBottom: 16 }}>
+                  Click nodes on the canvas to add them to your pipeline.
+                </div>
+              ) : (
+                <div style={{ display: 'flex', flexDirection: 'column', gap: 6, marginBottom: 16 }}>
+                  {currentDrill.pipeline.map((nodeId, i) => (
+                    <div key={nodeId} style={{
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: 8,
+                      background: 'var(--panel-bg)',
+                      border: '1px solid var(--panel-border)',
+                      borderRadius: 6,
+                      padding: '7px 10px',
+                    }}>
+                      <span style={{ fontSize: 12, color: 'var(--accent)', fontWeight: 700, minWidth: 18 }}>{i + 1}</span>
+                      <span style={{ flex: 1, fontSize: 14, color: 'var(--text)' }}>{titleById(nodeId)}</span>
+                      <button
+                        onClick={() => reorderPipeline(i, i - 1)}
+                        disabled={i === 0}
+                        style={{ background: 'transparent', border: 'none', color: i === 0 ? 'var(--text-muted)' : 'var(--text)', cursor: i === 0 ? 'default' : 'pointer', fontSize: 14, padding: '0 4px' }}
+                      >↑</button>
+                      <button
+                        onClick={() => reorderPipeline(i, i + 1)}
+                        disabled={i === currentDrill.pipeline.length - 1}
+                        style={{ background: 'transparent', border: 'none', color: i === currentDrill.pipeline.length - 1 ? 'var(--text-muted)' : 'var(--text)', cursor: i === currentDrill.pipeline.length - 1 ? 'default' : 'pointer', fontSize: 14, padding: '0 4px' }}
+                      >↓</button>
+                      <button
+                        onClick={() => removeFromPipeline(i)}
+                        style={{ background: 'transparent', border: 'none', color: '#c0504a', cursor: 'pointer', fontSize: 14, padding: '0 4px' }}
+                      >×</button>
+                    </div>
+                  ))}
+                </div>
+              )}
+              <div style={{ display: 'flex', gap: 10 }}>
+                <button
+                  onClick={submitScenarioBuilder}
+                  disabled={currentDrill.pipeline.length === 0}
+                  style={{
+                    ...primaryBtnStyle,
+                    opacity: currentDrill.pipeline.length > 0 ? 1 : 0.45,
+                    cursor: currentDrill.pipeline.length > 0 ? 'pointer' : 'not-allowed',
+                  }}
+                >
+                  Submit
+                </button>
+                <button onClick={dismiss} style={secondaryBtnStyle}>Cancel</button>
+              </div>
+            </div>
+          </>
+        )}
+
+        {/* ============ GRADED: SCENARIO BUILDER — VERDICT PENDING ============ */}
+        {phase === 'graded' && result?.drill.kind === 'scenario-builder' && result.verdict === undefined && (
+          <>
+            <div style={{ maxWidth: 600, width: '100%' }}>
+              <div style={{ fontSize: 15, fontWeight: 600, color: 'var(--text)', marginBottom: 12 }}>Self-grade</div>
+              <div style={{
+                background: 'var(--panel-bg)',
+                border: '1px solid var(--panel-border)',
+                borderLeft: '3px solid var(--accent)',
+                borderRadius: 6,
+                padding: '10px 14px',
+                fontSize: 14,
+                color: 'var(--text)',
+                marginBottom: 16,
+                fontStyle: 'italic',
+              }}>
+                {result.problemStatement}
+              </div>
+              <div style={{ fontSize: 12, color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: 8 }}>
+                Pipeline
+              </div>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 6, marginBottom: 20 }}>
+                {(result.pipeline ?? []).map((nodeId, i) => (
+                  <div key={nodeId} style={{
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: 8,
+                    background: 'var(--panel-bg)',
+                    border: '1px solid var(--panel-border)',
+                    borderRadius: 6,
+                    padding: '7px 10px',
+                  }}>
+                    <span style={{ fontSize: 12, color: 'var(--accent)', fontWeight: 700, minWidth: 18 }}>{i + 1}</span>
+                    <span style={{ fontSize: 14, color: 'var(--text)' }}>{titleById(nodeId)}</span>
+                  </div>
+                ))}
+              </div>
+              <div style={{ display: 'flex', gap: 8, marginBottom: 16 }}>
+                <button
+                  onClick={() => void gradeScenarioBuilder('correct')}
+                  style={{ ...primaryBtnStyle, flex: 1, background: '#4a7a5a' }}
+                >Correct +0.10</button>
+                <button
+                  onClick={() => void gradeScenarioBuilder('partial')}
+                  style={{ ...primaryBtnStyle, flex: 1, background: '#8a6a2a' }}
+                >Partial +0.05</button>
+                <button
+                  onClick={() => void gradeScenarioBuilder('wrong')}
+                  style={{ ...primaryBtnStyle, flex: 1, background: '#c0504a' }}
+                >Wrong −0.10</button>
+              </div>
+              <button onClick={dismiss} style={secondaryBtnStyle}>Cancel</button>
+            </div>
+          </>
+        )}
+
+        {/* ============ GRADED: SCENARIO BUILDER — VERDICT PICKED ============ */}
+        {phase === 'graded' && result?.drill.kind === 'scenario-builder' && result.verdict !== undefined && (
+          <>
+            <div style={{ maxWidth: 600, width: '100%' }}>
+              <div style={{
+                fontSize: 22,
+                fontWeight: 700,
+                marginBottom: 12,
+                color: result.verdict === 'correct' ? '#5a9a6a' : result.verdict === 'partial' ? '#c8963a' : '#c0504a',
+              }}>
+                {result.verdict === 'correct' ? 'Marked correct' : result.verdict === 'partial' ? 'Marked partial' : 'Marked wrong'}
+              </div>
+              <div style={{ fontSize: 15, color: 'var(--text-muted)', marginBottom: 20 }}>
+                {(result.nodesAffected ?? []).length} node{(result.nodesAffected ?? []).length !== 1 ? 's' : ''} · mastery{' '}
+                {(result.masteryDelta ?? 0) > 0 ? `+${result.masteryDelta?.toFixed(2)}` : result.masteryDelta?.toFixed(2)}
+              </div>
+              <div style={{ display: 'flex', gap: 10 }}>
+                <button onClick={() => startScenarioBuilder()} style={primaryBtnStyle}>Pick another</button>
+                <button onClick={dismiss} style={secondaryBtnStyle}>Done</button>
+              </div>
             </div>
           </>
         )}

@@ -2,7 +2,7 @@
 
 # Nexus Study Engine
 
-**Last updated: 2026-05-07 (Packet 8a)**
+**Last updated: 2026-05-07 (Packet 9)**
 
 ---
 
@@ -26,9 +26,12 @@ Nexus Study Engine is a spatial knowledge graph for solo deep-learning. The user
 | Hotfixes 5.x | Self-loop guard added to `onConnect` (`conn.source === conn.target` early return — was missing entirely). Escape-to-close on `CanvasContextMenu` hardened to capture-phase listeners on both `window` and `document` for reliable dismissal. Edge context menu separator verified present in both data and renderer (no change needed). |
 | Packet 6 | **Memorizer Lens — Cloze Collapse.** New `drillStore` (Zustand), `src/types/drill.ts`, and deterministic `clozeSelection` util (seeded LCG from text hash, 1–8 blanks, content-word bias). `FocusWorkspace` becomes full drill stage with `idle`/`active`/`graded` phases. "Study this node" button in Inspector node mode (eligible iff a text layer ≥ 30 chars). `NodeDoc` gained `accessCount: number` and `lastAccessedAt: Timestamp \| null`. `viewStore.setViewMode` added for programmatic mode switching. Mastery formula on submit: +0.10 perfect / +0.05 ≥ 80% / 0 in 50–80% / −0.10 below 50%, clamped [0, 1]. |
 | Packet 6.5 | **Memorizer Lens — Path Finder.** New `src/utils/pathFinding.ts` (`getNeighbors`, `findEligiblePair`, `shortestPathLength`). `PathFinderDrill` type added to `drill.ts` union; `drillStore` extended with `startPathFinder`, `clickPathStep`, `giveUp` actions. `GraphCanvas` routes node clicks to `clickPathStep` during active drill; pane click no-ops. `StudyNode` subscribes to drillStore and shows per-node visual state: source (blue glow), target (green glow), in-path (orange dashed outline). New `PathFinderOverlay` floating panel (canvas-relative, top-center, z-50): active phase shows breadcrumb + Undo / Submit / Give Up; graded phase shows verdict, path summary, mastery delta, Pick another / Done. Sidebar gains a "Drills" section with Path Finder button + 3s inline error on sparse graph. Edge traversal rules: `parent-child` and `related` bidirectional; `prerequisite` and `sequence` source→target only. Mastery on submit: +0.10 shortest path / +0.05 one hop over / 0 two hops over / −0.10 invalid or give up; applied to start + end nodes only. |
-| Packet 8a | Drill-phase canvas edit lockout. Edge creation and delete-key handler locked out during active drill phases; node position drag still allowed. |
+| Packet 8a | **Architect Lens — Missing Link + Cluster Title drills.** New utils: `missingLink.ts` (eligible pair = no direct or indirect path, shares tag or 2-hop neighbor under bidirectional traversal), `clusterTitleSelection.ts` (parent with ≥2 `parent-child` children), `stringMatch.ts` (graduated match: exact 1.0 / Levenshtein ≤2 → 0.9 / substring → 0.7 / Jaccard ≥50% → 0.5). New drill types `MissingLinkDrill` + `ClusterTitleDrill` added to `drill.ts` union. `drillStore` extended: `startMissingLink`, `setMissingLinkType`, `setMissingLinkJustification`, `submitMissingLink`, `giveUpMissingLink`, `startClusterTitle`, `setClusterTitleInput`, `submitClusterTitle`, `giveUpClusterTitle`. Missing Link mastery: +0.10 to both endpoints on submit, −0.10 on give-up; edge written via `graphStore.createEdge`. Cluster Title mastery: score 1.0 → +0.10, 0.9 → +0.05, 0.7 → 0, ≤0.5 → −0.10 on parent node only. `StudyNode` gains per-kind visual states: missing-link endpoints get accent outline + glow + `?` badge; cluster-title parent gets dashed accent outline + `?` title mask; children get orange outline. New `MissingLinkOverlay` and `ClusterTitleOverlay` floating panels (canvas-relative, top-center, z-50). `GraphCanvas` click routing extended: non-path-finder active drills are no-ops on node and pane click. Canvas edit lockout (edge creation + Delete/Backspace) already present from prior sub-packet. Sidebar gains Missing Link and Cluster Title buttons with per-button 3s inline errors. |
+| Packet 8b | **Architect Lens: Pre-work fixes + Sorter drill.** Pre-work: renamed `clozeSelection.ts` → `cloze.ts` and `clusterTitleSelection.ts` → `clusterTitle.ts`; verified `accessCount`/`lastAccessedAt` increments on all 4 drill starts; phase-gated Cluster Title title mask and children outline to `active` only; confirmed Missing Link justification floor (≥10 chars) and `edge.label` population; added color swatch previews to `MissingLinkOverlay` edge-type buttons; changed children outline from `#d4924a` → `rgba(107,138,253,0.45)`. Sorter drill: new `sorter.ts` util (`selectSorterCandidate` — 2–3 parents each with ≥2 `parent-child` children, 4–7 children total, no shared children); new `SorterDrill` type in `drill.ts`; `drillStore` extended with `startSorter` (saves originalPositions, scrambles children to bottom of canvas), `assignChild` (drag proximity ≤200px → parent, else null), `submitSorter` (score = correct/total, mastery delta via formula, applied to all parents + children), `giveUpSorter` (−0.10 to all), `dismiss` restores original positions for sorter. `GraphCanvas`: filters out parent-child edges between sorter parents↔children during active drill; `onNodeDragStop` triggers proximity detection and calls `assignChild`. `StudyNode`: parent gets accent outline + glow during active; child gets dashed-muted when unplaced / solid-accent when placed; graded shows ✓/✗ badge per child. New `SorterOverlay.tsx`: active phase shows placed progress + Submit (disabled until all placed) + Give Up; graded phase shows score verdict with color + mastery delta + note + Pick another / Done. Sidebar gains Sorter button + 3s inline error. **Architect Lens complete.** |
 
-**Next: Packet 8 — Architect Lens** (Missing Link, Sorter, Cluster Title drills).
+| Packet 9 | **Practitioner Lens: Scenario Builder.** New `ScenarioBuilderDrill` type (`kind: 'scenario-builder'`, `problemStatement`, `pipeline: string[]`, `builderPhase: 'authoring' | 'building'`); extended `DrillResult` with optional `verdict`, `problemStatement`, `pipeline`, `nodesAffected` fields. Added `'dual'` to `ViewMode` in viewStore. `drillStore` extended: `startScenarioBuilder` (≥3 nodes required, activates dual view), `setProblemStatement`, `commitProblemStatement` (≥10 chars guard), `addToPipeline` (deduplicates + increments `accessCount`/`lastAccessedAt`), `removeFromPipeline`, `reorderPipeline`, `submitScenarioBuilder` (phase → graded, no mastery yet), `gradeScenarioBuilder` (correct +0.10 / partial +0.05 / wrong −0.10 applied to all pipeline nodes); `dismiss` extended to call `setViewMode('canvas')` for scenario-builder. `AppShell` gains `'dual'` branch: horizontal flex with `<GraphCanvas />` left + `<FocusWorkspace />` right, 50/50, 1px panel-border divider. `GraphCanvas` click routing: during `scenario-builder` `building` phase, node clicks call `addToPipeline`; `authoring` phase is a no-op. `StudyNode` gains pipeline visual state: accent outline + circular numbered badge (top-left, position in pipeline) during active and graded phases. `FocusWorkspace` extended with four new scenario-builder view states: authoring (textarea + char counter + Start/Cancel), building (read-only statement + ordered pipeline with ↑↓× controls + Submit/Cancel), graded-pending (statement + pipeline + Correct/Partial/Wrong buttons), graded-done (verdict heading + mastery line + Pick another/Done). Sidebar gains Scenario Builder button with 3s "Need at least 3 nodes" inline error. Spec deviations: click-to-add instead of drag (React Flow gesture conflict); no Give Up button (no objective answer; Cancel = no penalty). |
+
+**Next: Packet 10 — Practitioner Lens: AI Ingestion (BYO-AI).**
 
 ---
 
@@ -84,16 +87,22 @@ graphStore (Zustand)
   getSelectedEntity()              ← standalone helper, returns { kind, node|edge } | null
 
 viewStore (Zustand)
-  viewMode: 'canvas' | 'focus'
+  viewMode: 'canvas' | 'focus' | 'dual'
   sidebarCollapsed, inspectorCollapsed
   toggleViewMode, setViewMode, toggleSidebar, toggleInspector
 
 drillStore (Zustand)
   phase: 'idle' | 'active' | 'graded'
-  currentDrill: Drill | null   ← discriminated union (ClozeDrill | PathFinderDrill)
+  currentDrill: Drill | null   ← discriminated union (ClozeDrill | PathFinderDrill | MissingLinkDrill | ClusterTitleDrill)
   result: DrillResult | null
   actions (cloze): startCloze, setAnswer, submit, dismiss
   actions (path-finder): startPathFinder, clickPathStep, giveUp
+  actions (missing-link): startMissingLink, setMissingLinkType, setMissingLinkJustification, submitMissingLink, giveUpMissingLink
+  actions (cluster-title): startClusterTitle, setClusterTitleInput, submitClusterTitle, giveUpClusterTitle
+  actions (sorter): startSorter, assignChild, submitSorter, giveUpSorter
+  actions (scenario-builder): startScenarioBuilder, setProblemStatement, commitProblemStatement,
+                              addToPipeline, removeFromPipeline, reorderPipeline,
+                              submitScenarioBuilder, gradeScenarioBuilder
 ```
 
 ### Storage abstraction
@@ -347,14 +356,14 @@ Non-adjacent connected node pair selected at random; user clicks intermediate no
 
 **Shipped.**
 
-### Packet 8 — Architect Lens (three drills, one packet)
-- **Missing Link**: pick two semantically related but unconnected nodes (no current path; share tags or 2-hop neighbors). User draws an edge, picks a type, writes a one-sentence justification stored in `edge.label`.
-- **Sorter**: detach a parent's children, scramble at canvas bottom; user drags each back under correct parent. Validates against original parent-child edges.
-- **Cluster Title**: pick a connected sub-cluster, hide parent's title; user types it. Graduated string match — exact 1.0 / Levenshtein ≤2 0.9 / one contains other 0.7 / ≥50% word overlap 0.5; pass ≥0.7.
-- All three update mastery via the standard formula. No AI grading.
+### Packet 8a — Architect Lens: Missing Link + Cluster Title
+**Shipped.** See Packet Log row above for full detail.
+
+### Packet 8b — Architect Lens: Sorter
+**Shipped.** See Packet Log row above for full detail.
 
 ### Packet 9 — Practitioner Lens: Scenario Builder
-User-typed problem statement → dual-view (canvas + FocusWorkspace open simultaneously); user drags relevant nodes into the workspace as an ordered pipeline; user self-grades correct/partial/wrong; mastery applied to all involved nodes.
+**Shipped.** See Packet Log row above for full detail.
 
 ### Packet 9.5 — Practitioner Lens: The Debugger
 New schema field `brokenVersion?: string` on Layer. User authors a broken version of a code/math layer; drill renders the broken version in Monaco with edge-connected nodes accessible in a side panel; whitespace-flexible diff against canonical; mastery on submit.
@@ -397,8 +406,11 @@ StudyTool/                         ← repo root (C:\Users\olivf\StudyToolProjec
 │   ├── components/
 │   │   ├── canvas/
 │   │   │   ├── CanvasContextMenu.tsx
+│   │   │   ├── ClusterTitleOverlay.tsx
 │   │   │   ├── GraphCanvas.tsx
+│   │   │   ├── MissingLinkOverlay.tsx
 │   │   │   ├── PathFinderOverlay.tsx
+│   │   │   ├── SorterOverlay.tsx
 │   │   │   └── StudyNode.tsx
 │   │   ├── layout/
 │   │   │   ├── AppShell.tsx
@@ -432,10 +444,14 @@ StudyTool/                         ← repo root (C:\Users\olivf\StudyToolProjec
 │   │   ├── drill.ts
 │   │   └── graph.ts
 │   ├── utils/
-│   │   ├── clozeSelection.ts
+│   │   ├── cloze.ts
+│   │   ├── clusterTitle.ts
 │   │   ├── edgeStyles.ts
 │   │   ├── masteryColor.ts
-│   │   └── pathFinding.ts
+│   │   ├── missingLink.ts
+│   │   ├── pathFinding.ts
+│   │   ├── sorter.ts
+│   │   └── stringMatch.ts
 │   ├── App.tsx
 │   ├── main.tsx
 │   └── vite-env.d.ts
