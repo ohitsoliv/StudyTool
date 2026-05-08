@@ -1,0 +1,257 @@
+{
+  "metadata": {
+    "name": "Houseplant Care",
+    "description": "Low-stakes test graph. 8 nodes, exercises all four edge types (parent-child, related, prerequisite, sequence) so drill flows can be tested without re-reading academic content."
+  },
+  "nodes": [
+    {
+      "id": "n_houseplants",
+      "title": "Houseplants",
+      "position": { "x": 500, "y": 80 },
+      "layers": [
+        {
+          "depth": 1,
+          "content": "Plants grown indoors for decoration, air quality, or general enjoyment. Care reduces to three concerns: light, water, and nutrients.",
+          "contentType": "text",
+          "createdAt": "2026-05-08T00:00:00Z"
+        }
+      ],
+      "tags": ["root", "overview"],
+      "mastery": { "score": 0.85, "lastReviewedAt": null, "reviewCount": 0 },
+      "createdAt": "2026-05-08T00:00:00Z",
+      "updatedAt": "2026-05-08T00:00:00Z",
+      "archived": false,
+      "clusterId": null,
+      "accessCount": 0,
+      "lastAccessedAt": null
+    },
+    {
+      "id": "n_light_needs",
+      "title": "Light Needs",
+      "position": { "x": 250, "y": 220 },
+      "layers": [
+        {
+          "depth": 1,
+          "content": "Each plant has a preferred light intensity. Mismatching causes leggy growth (too little) or scorched leaves (too much). Check the species before buying.",
+          "contentType": "text",
+          "createdAt": "2026-05-08T00:00:00Z"
+        }
+      ],
+      "tags": ["light"],
+      "mastery": { "score": 0.6, "lastReviewedAt": null, "reviewCount": 0 },
+      "createdAt": "2026-05-08T00:00:00Z",
+      "updatedAt": "2026-05-08T00:00:00Z",
+      "archived": false,
+      "clusterId": null,
+      "accessCount": 0,
+      "lastAccessedAt": null
+    },
+    {
+      "id": "n_care_routine",
+      "title": "Care Routine",
+      "position": { "x": 750, "y": 220 },
+      "layers": [
+        {
+          "depth": 1,
+          "content": "The recurring tasks that keep a plant alive: water, feed, repot. Frequency depends on species, season, and pot size.",
+          "contentType": "text",
+          "createdAt": "2026-05-08T00:00:00Z"
+        }
+      ],
+      "tags": ["care"],
+      "mastery": { "score": 0.5, "lastReviewedAt": null, "reviewCount": 0 },
+      "createdAt": "2026-05-08T00:00:00Z",
+      "updatedAt": "2026-05-08T00:00:00Z",
+      "archived": false,
+      "clusterId": null,
+      "accessCount": 0,
+      "lastAccessedAt": null
+    },
+    {
+      "id": "n_low_light",
+      "title": "Low Light",
+      "position": { "x": 80, "y": 380 },
+      "layers": [
+        {
+          "depth": 1,
+          "content": "Indirect or filtered light, several feet from a window or in a room that gets little sun. Snake plants, pothos, and ZZ plants tolerate this well.",
+          "contentType": "text",
+          "createdAt": "2026-05-08T00:00:00Z"
+        }
+      ],
+      "tags": ["light"],
+      "mastery": { "score": 0.4, "lastReviewedAt": null, "reviewCount": 0 },
+      "createdAt": "2026-05-08T00:00:00Z",
+      "updatedAt": "2026-05-08T00:00:00Z",
+      "archived": false,
+      "clusterId": null,
+      "accessCount": 0,
+      "lastAccessedAt": null
+    },
+    {
+      "id": "n_bright_light",
+      "title": "Bright Light",
+      "position": { "x": 380, "y": 380 },
+      "layers": [
+        {
+          "depth": 1,
+          "content": "Direct sun for several hours, or steady bright indirect light close to a south- or west-facing window. Succulents, cacti, and most flowering plants prefer this.",
+          "contentType": "text",
+          "createdAt": "2026-05-08T00:00:00Z"
+        }
+      ],
+      "tags": ["light"],
+      "mastery": { "score": 0.7, "lastReviewedAt": null, "reviewCount": 0 },
+      "createdAt": "2026-05-08T00:00:00Z",
+      "updatedAt": "2026-05-08T00:00:00Z",
+      "archived": false,
+      "clusterId": null,
+      "accessCount": 0,
+      "lastAccessedAt": null
+    },
+    {
+      "id": "n_watering",
+      "title": "Watering",
+      "position": { "x": 600, "y": 380 },
+      "layers": [
+        {
+          "depth": 1,
+          "content": "Water when the top inch of soil is dry. Most houseplants die from overwatering, not underwatering. Drainage holes are non-negotiable.",
+          "contentType": "text",
+          "createdAt": "2026-05-08T00:00:00Z"
+        }
+      ],
+      "tags": ["care", "water"],
+      "mastery": { "score": 0.3, "lastReviewedAt": null, "reviewCount": 0 },
+      "createdAt": "2026-05-08T00:00:00Z",
+      "updatedAt": "2026-05-08T00:00:00Z",
+      "archived": false,
+      "clusterId": null,
+      "accessCount": 0,
+      "lastAccessedAt": null
+    },
+    {
+      "id": "n_fertilizing",
+      "title": "Fertilizing",
+      "position": { "x": 820, "y": 380 },
+      "layers": [
+        {
+          "depth": 1,
+          "content": "Diluted liquid fertilizer every 4-6 weeks during the growing season (spring/summer); pause in winter. Less is more - burnt roots are common.",
+          "contentType": "text",
+          "createdAt": "2026-05-08T00:00:00Z"
+        }
+      ],
+      "tags": ["care", "nutrients"],
+      "mastery": { "score": 0.2, "lastReviewedAt": null, "reviewCount": 0 },
+      "createdAt": "2026-05-08T00:00:00Z",
+      "updatedAt": "2026-05-08T00:00:00Z",
+      "archived": false,
+      "clusterId": null,
+      "accessCount": 0,
+      "lastAccessedAt": null
+    },
+    {
+      "id": "n_repotting",
+      "title": "Repotting",
+      "position": { "x": 1040, "y": 380 },
+      "layers": [
+        {
+          "depth": 1,
+          "content": "Move to a pot one size larger every 1-2 years, or when roots circle the bottom. Best done in spring before active growth resumes.",
+          "contentType": "text",
+          "createdAt": "2026-05-08T00:00:00Z"
+        }
+      ],
+      "tags": ["care"],
+      "mastery": { "score": 0.5, "lastReviewedAt": null, "reviewCount": 0 },
+      "createdAt": "2026-05-08T00:00:00Z",
+      "updatedAt": "2026-05-08T00:00:00Z",
+      "archived": false,
+      "clusterId": null,
+      "accessCount": 0,
+      "lastAccessedAt": null
+    }
+  ],
+  "edges": [
+    {
+      "id": "e_houseplants_lightneeds",
+      "source": "n_houseplants",
+      "target": "n_light_needs",
+      "type": "parent-child",
+      "createdAt": "2026-05-08T00:00:00Z"
+    },
+    {
+      "id": "e_houseplants_careroutine",
+      "source": "n_houseplants",
+      "target": "n_care_routine",
+      "type": "parent-child",
+      "createdAt": "2026-05-08T00:00:00Z"
+    },
+    {
+      "id": "e_lightneeds_lowlight",
+      "source": "n_light_needs",
+      "target": "n_low_light",
+      "type": "parent-child",
+      "createdAt": "2026-05-08T00:00:00Z"
+    },
+    {
+      "id": "e_lightneeds_brightlight",
+      "source": "n_light_needs",
+      "target": "n_bright_light",
+      "type": "parent-child",
+      "createdAt": "2026-05-08T00:00:00Z"
+    },
+    {
+      "id": "e_careroutine_watering",
+      "source": "n_care_routine",
+      "target": "n_watering",
+      "type": "parent-child",
+      "createdAt": "2026-05-08T00:00:00Z"
+    },
+    {
+      "id": "e_careroutine_fertilizing",
+      "source": "n_care_routine",
+      "target": "n_fertilizing",
+      "type": "parent-child",
+      "createdAt": "2026-05-08T00:00:00Z"
+    },
+    {
+      "id": "e_careroutine_repotting",
+      "source": "n_care_routine",
+      "target": "n_repotting",
+      "type": "parent-child",
+      "createdAt": "2026-05-08T00:00:00Z"
+    },
+    {
+      "id": "e_lightneeds_watering",
+      "source": "n_light_needs",
+      "target": "n_watering",
+      "type": "prerequisite",
+      "label": "more light = faster soil dry-out",
+      "createdAt": "2026-05-08T00:00:00Z"
+    },
+    {
+      "id": "e_watering_fertilizing",
+      "source": "n_watering",
+      "target": "n_fertilizing",
+      "type": "sequence",
+      "createdAt": "2026-05-08T00:00:00Z"
+    },
+    {
+      "id": "e_fertilizing_repotting",
+      "source": "n_fertilizing",
+      "target": "n_repotting",
+      "type": "sequence",
+      "createdAt": "2026-05-08T00:00:00Z"
+    },
+    {
+      "id": "e_lowlight_brightlight",
+      "source": "n_low_light",
+      "target": "n_bright_light",
+      "type": "related",
+      "label": "opposite ends of the same axis",
+      "createdAt": "2026-05-08T00:00:00Z"
+    }
+  ]
+}

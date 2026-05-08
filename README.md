@@ -2,7 +2,7 @@
 
 # Nexus Study Engine
 
-**Last updated: 2026-05-08 (Packet 11c: session orchestration + pool-aware random drill routing)**
+**Last updated: 2026-05-08 (Packet 11c.1: seed graph expansion with Houseplant Care)**
 
 ---
 
@@ -21,6 +21,7 @@ Update this section every time this README is updated, even if the entry is just
 - 2026-05-07: Missing Link updates mastery after `createEdge(...)` without validating edge creation success beyond the awaited call, so a storage failure could leave mastery updated without the edge being persisted in `src/store/drillStore.ts`.
 - 2026-05-07: RESOLVED - Debugger drill actions (startDebugger, setDebuggerInput, submitDebugger, giveUpDebugger) and DebuggerDrill types were absent from the canonical on-disk `src/store/drillStore.ts` and `src/types/drill.ts`. Root cause: Packet 9.5 disk writes were never committed to those two files. PowerShell patches applied; build (1971 modules) and full runtime audit passed. Audit matrix: Cloze ?, Path Finder ?, Missing Link ?, Cluster Title ?, Sorter ?, Scenario Builder ?, Debugger ?.
 - 2026-05-08: Packet 11c shipped and deployed. Build is clean, but full manual UX smoke for all session mode permutations (open / class-study empty pool / class-study populated pool / exam-prep with timer bound) is still pending.
+- 2026-05-08: Added JSON-seeded "Houseplant Care" graph (8 nodes, all 4 edge types) as a low-stakes drill test dataset. Build is clean; manual in-app seed-button smoke pending.
 
 ---
 
@@ -50,8 +51,9 @@ Update this section every time this README is updated, even if the entry is just
 | Packet 11a | **Foundations: Settings, Shortcuts, Polish, Robustness.** New `useUserPrefsStore` (Zustand persist) holding mastery colour vars, sidebar/drill visibility, lens names, edge nicknames, default session mode, and settings/legend open flags. New `src/lib/shortcuts.ts` + `registerShortcuts.ts` + `useShortcuts.ts` hook — 7 keyboard shortcuts (Ctrl+E toggle-view, Esc deselect, `?`/`Ctrl+/` open legend, `Ctrl+,` open settings, `S` study-selected, `N` new-node) installed at App level via a single `keydown` listener; same registry drives the auto-generated `ShortcutLegendModal`. `SettingsModal` (Ctrl+,) covers mastery colours, sidebar drills toggle, session mode, lens names, edge nicknames, and one-click reset. `useApplyMasteryCssVars` side-effect hook writes 4 CSS vars on every pref change. Edge polish: `related` opacity 0.85 / strokeWidth 1.5. Handle polish: handles 10 × 10 px with `title="Drag to connect"`. EdgeInspector redesigned — header row (type-pill select + trash), source→target clickable row with muted arrow, created-at timestamp. `drillStore` double-submit guard (`submitting` flag) on all 7 async handlers. `graphStore.updateEdge` rolls back optimistic state on failure; `deleteNode` cascades to incident edges before deleting the node. Removed `mastery.css` and its `@import` (CSS vars now written dynamically). |
 | Packet 11b | **Integrator pass: Focus Workspace picker + right-click drill launch sections.** Added `src/utils/drillEligibility.ts` with shared eligibility helpers and user-facing disabled reasons. Added `src/components/workspace/FocusPicker.tsx` and wired Focus Workspace idle state to render the picker (`phase === 'idle' && !currentDrill`). `drillStore.startCloze` now switches view mode to focus before setting drill state so canvas right-click launch paths are visible immediately. Canvas context menu now supports flat section labels and disabled items with reason tooltips; pane menu gets **START A DRILL** (Path Finder, Missing Link, Cluster Title, Sorter, Scenario Builder, Debugger random), node menu gets **STUDY THIS NODE** (Cloze + Debugger targeted). Edge menu behavior unchanged. |
 | Packet 11c | **Session system wiring + pool-aware random drill routing.** Added `sessionStore` + `SessionModal` + `SessionBanner` and mounted modal in `App`. Added Start Session launch points in Focus Picker, Sidebar, pane context menu, and Ctrl+Shift+S shortcut. Graded actions in Focus Workspace are now session-aware: no auto-advance from submit/give-up; session mode shows Next drill / End session or Session complete + Done when bound reached. Added optional `poolNodeIds` support to random-selection helpers (`cloze`, `pathFinding`, `missingLink`, `clusterTitle`, `sorter`) and threaded pool-aware options through per-drill eligibility helpers plus random-mode drill starts in `drillStore` (including new `startClozeRandom`). Class-study empty pools are handled gracefully with banner messaging and End session path. |
+| Packet 11c.1 | **Seed graph expansion: Houseplant Care.** Added `src/scripts/seedData/houseplantCare.json`, new `seedHouseplantCare()` in `src/scripts/seedGraph.ts`, and a new Sidebar Dev button **Seed Houseplant Care**. Dataset intentionally covers all 4 edge types (`parent-child`, `related`, `prerequisite`, `sequence`) for quick drill-system smoke testing. |
 
-**Next: Packet 11c — drill-menu expansion (submenus deferred from 11b).**
+**Next: Packet 11d — drill-menu expansion (submenus deferred from 11b).**
 
 ---
 
@@ -457,6 +459,9 @@ StudyTool/                         ← repo root (C:\Users\olivf\StudyToolProjec
 │   ├── lib/
 │   │   └── firebase.ts
 │   ├── scripts/
+│   │   ├── seedData/
+│   │   │   ├── houseplantCare.json
+│   │   │   └── lgbtqIdentityVocabulary.json
 │   │   └── seedGraph.ts
 │   ├── services/
 │   │   └── storage/

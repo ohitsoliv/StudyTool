@@ -3,7 +3,7 @@ import { useUserPrefsStore } from "../../store/userPrefsStore";
 import { PanelLeft, Settings } from "lucide-react";
 import { useGraphStore } from "../../store/graphStore";
 import { GraphMetadata } from "../../types/graph";
-import { seedGraph, seedLinearAlgebra, seedLgbtqIdentityVocabulary } from "../../scripts/seedGraph";
+import { seedGraph, seedLinearAlgebra, seedLgbtqIdentityVocabulary, seedHouseplantCare } from "../../scripts/seedGraph";
 import { useViewStore } from "../../store/viewStore";
 import { useDrillStore } from '../../store/drillStore';
 import { useSessionStore } from '../../store/sessionStore';
@@ -111,6 +111,12 @@ export default function Sidebar(): JSX.Element {
   const handleSeedLgbtq = async (): Promise<void> => {
     if (!confirm('Seed the database with "LGBTQ+ Identity Vocabulary"?')) return;
     await seedLgbtqIdentityVocabulary();
+    await fetchGraphs();
+  };
+
+  const handleSeedHouseplant = async (): Promise<void> => {
+    if (!confirm('Seed the database with "Houseplant Care"?')) return;
+    await seedHouseplantCare();
     await fetchGraphs();
   };
 
@@ -547,6 +553,20 @@ export default function Sidebar(): JSX.Element {
             }}
           >
             Seed LGBTQ+ Vocabulary
+          </button>
+
+          <button
+            onClick={handleSeedHouseplant}
+            style={{
+              cursor: "pointer",
+              border: "1px solid var(--panel-border)",
+              borderRadius: 6,
+              padding: "0.45rem 0.6rem",
+              textAlign: "left",
+              marginTop: 6,
+            }}
+          >
+            Seed Houseplant Care
           </button>
 
           <div style={{ marginTop: 12, fontSize: 11, color: 'var(--text-muted, #888)' }}>
