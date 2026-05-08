@@ -1,7 +1,8 @@
 import { useEffect, useRef } from 'react';
 
 export type MenuItem =
-  | { label: string; onClick: () => void; destructive?: boolean }
+  | { label: string; onClick: () => void; destructive?: boolean; disabled?: boolean; title?: string }
+  | { sectionLabel: string }
   | { separator: true };
 
 export interface CanvasContextMenuProps {
@@ -49,14 +50,34 @@ export function CanvasContextMenu({ x, y, items, onClose }: CanvasContextMenuPro
         if ('separator' in item) {
           return <div key={i} className="canvas-context-menu__separator" />;
         }
+        if ('sectionLabel' in item) {
+          return (
+            <div
+              key={i}
+              style={{
+                fontSize: 11,
+                textTransform: 'uppercase',
+                letterSpacing: 0.5,
+                color: 'var(--text-muted)',
+                padding: '4px 8px',
+              }}
+            >
+              {item.sectionLabel}
+            </div>
+          );
+        }
         return (
           <button
             key={i}
+            disabled={item.disabled}
+            title={item.title ?? ''}
             className={
               'canvas-context-menu__item' +
               (item.destructive ? ' canvas-context-menu__item--destructive' : '')
             }
+            style={item.disabled ? { opacity: 0.55, cursor: 'not-allowed' } : undefined}
             onClick={() => {
+              if (item.disabled) return;
               item.onClick();
               onClose();
             }}

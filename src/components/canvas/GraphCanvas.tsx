@@ -23,6 +23,16 @@ import PathFinderOverlay from './PathFinderOverlay';
 import MissingLinkOverlay from './MissingLinkOverlay';
 import ClusterTitleOverlay from './ClusterTitleOverlay';
 import SorterOverlay from './SorterOverlay';
+import {
+  canCloze,
+  canDebuggerNode,
+  canDebuggerSystem,
+  canPathFinder,
+  canMissingLink,
+  canClusterTitle,
+  canSorter,
+  canScenarioBuilder,
+} from '../../utils/drillEligibility';
 
 const nodeTypes = { study: StudyNode };
 
@@ -227,8 +237,57 @@ function GraphCanvasInner() {
   const menuItems: MenuItem[] = useMemo(() => {
     if (!menu) return [];
 
+    const graphSnapshot = useGraphStore.getState();
+    const menuNodes = graphSnapshot.nodes;
+    const menuEdges = graphSnapshot.edges;
+
     if (menu.kind === 'pane') {
+      const pathFinderEligibility = canPathFinder(menuNodes, menuEdges);
+      const missingLinkEligibility = canMissingLink(menuNodes);
+      const clusterTitleEligibility = canClusterTitle(menuEdges);
+      const sorterEligibility = canSorter(menuEdges);
+      const scenarioEligibility = canScenarioBuilder(menuNodes);
+      const debuggerEligibility = canDebuggerSystem(menuNodes);
+
       return [
+        { sectionLabel: 'START A DRILL' },
+        {
+          label: 'Path Finder',
+          disabled: !pathFinderEligibility.eligible,
+          title: pathFinderEligibility.reason,
+          onClick: () => useDrillStore.getState().startPathFinder(),
+        },
+        {
+          label: 'Missing Link',
+          disabled: !missingLinkEligibility.eligible,
+          title: missingLinkEligibility.reason,
+          onClick: () => useDrillStore.getState().startMissingLink(menuNodes, menuEdges),
+        },
+        {
+          label: 'Cluster Title',
+          disabled: !clusterTitleEligibility.eligible,
+          title: clusterTitleEligibility.reason,
+          onClick: () => useDrillStore.getState().startClusterTitle(menuNodes, menuEdges),
+        },
+        {
+          label: 'Sorter',
+          disabled: !sorterEligibility.eligible,
+          title: sorterEligibility.reason,
+          onClick: () => useDrillStore.getState().startSorter(menuNodes, menuEdges),
+        },
+        {
+          label: 'Scenario Builder',
+          disabled: !scenarioEligibility.eligible,
+          title: scenarioEligibility.reason,
+          onClick: () => useDrillStore.getState().startScenarioBuilder(),
+        },
+        {
+          label: 'Debugger (random)',
+          disabled: !debuggerEligibility.eligible,
+          title: debuggerEligibility.reason,
+          onClick: () => useDrillStore.getState().startDebugger(),
+        },
+        { separator: true },
         {
           label: 'New Node Here',
           onClick: async () => {
@@ -259,7 +318,27 @@ function GraphCanvasInner() {
 
     if (menu.kind === 'node') {
       const nodeId = menu.nodeId;
+      const node = menuNodes.find((n) => n.id === nodeId);
+      if (!node) return [];
+
+      const clozeEligibility = canCloze(node);
+      const debuggerEligibility = canDebuggerNode(node);
+
       return [
+        { sectionLabel: 'STUDY THIS NODE' },
+        {
+          label: 'Cloze',
+          disabled: !clozeEligibility.eligible,
+          title: clozeEligibility.reason,
+          onClick: () => useDrillStore.getState().startCloze(node),
+        },
+        {
+          label: 'Debugger',
+          disabled: !debuggerEligibility.eligible,
+          title: debuggerEligibility.reason,
+          onClick: () => useDrillStore.getState().startDebugger({ nodeId: node.id }),
+        },
+        { separator: true },
         { label: 'Edit', onClick: () => selectNode(nodeId) },
         {
           label: 'Add Connected Node',

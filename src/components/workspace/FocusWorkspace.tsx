@@ -4,6 +4,7 @@ import Editor from '@monaco-editor/react';
 import { useDrillStore } from '../../store/drillStore';
 import { useGraphStore } from '../../store/graphStore';
 import { useViewStore } from '../../store/viewStore';
+import FocusPicker from './FocusPicker';
 import type { NodeDoc } from '../../types/graph';
 
 const MIN_TEXT_LEN = 30;
@@ -330,18 +331,7 @@ export default function FocusWorkspace() {
       </div>
 
       <div style={bodyStyle}>
-        {phase === 'idle' && (
-          <div
-            style={{
-              marginTop: 80,
-              color: 'var(--text-muted)',
-              fontSize: 16,
-              textAlign: 'center',
-            }}
-          >
-            Select a node and press 'Study this node' to begin.
-          </div>
-        )}
+        {phase === 'idle' && !currentDrill && <FocusPicker />}
 
         {/* ============ ACTIVE: CLOZE ============ */}
         {activeCloze && (
