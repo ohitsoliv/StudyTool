@@ -132,6 +132,9 @@ export default function Sidebar(): JSX.Element {
             display: "flex",
             flexDirection: "column",
             gap: "8px",
+            flex: 1,
+            overflowY: "auto",
+            minHeight: 0,
           }}
         >
           <p
