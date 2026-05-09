@@ -56,4 +56,7 @@ export interface GraphMetadata {
   name: string;
   createdAt: Timestamp;
   updatedAt: Timestamp;
+  tags?: string[];
+  semester?: string | null;
+  universePosition?: { x: number; y: number } | null;
 }

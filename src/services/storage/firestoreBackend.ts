@@ -3,17 +3,20 @@ import {
   collection,
   deleteDoc,
   doc,
+  getDoc,
   getDocs,
   onSnapshot,
   orderBy,
   query,
   serverTimestamp,
+  setDoc,
   Timestamp,
   updateDoc,
 } from 'firebase/firestore';
 import { db } from '../../lib/firebase';
 import type { EdgeDoc, GraphMetadata, NodeDoc } from '../../types/graph';
 import type { StorageBackend, Unsubscribe } from './types';
+import type { UniversePrefs } from '../../types/universe';
 
 /**
  * Recursively strip undefined fields. Firestore rejects undefined values
@@ -75,6 +78,13 @@ export const firestoreBackend: StorageBackend = {
 
   async deleteGraph(userId, graphId) {
     await deleteDoc(doc(getGraphsRef(userId), graphId));
+  },
+
+  async updateGraph(userId, graphId, patch) {
+    await updateDoc(
+      doc(getGraphsRef(userId), graphId),
+      stripUndefined({ ...patch, updatedAt: serverTimestamp() }),
+    );
   },
 
   async listNodes(userId, graphId) {
@@ -156,6 +166,21 @@ export const firestoreBackend: StorageBackend = {
       }));
       callback(edges);
     });
+  },
+
+  async getUniversePrefs(userId): Promise<UniversePrefs | null> {
+    const ref = doc(db, 'users', userId, 'universePrefs', 'main');
+    const snap = await getDoc(ref);
+    if (!snap.exists()) return null;
+    return snap.data() as UniversePrefs;
+  },
+
+  async setUniversePrefs(userId, prefs) {
+    const ref = doc(db, 'users', userId, 'universePrefs', 'main');
+    const cleaned = {
+      edges: prefs.edges.map((e) => stripUndefined(e)),
+    };
+    await setDoc(ref, cleaned);
   },
 
   // resetAll intentionally omitted on cloud

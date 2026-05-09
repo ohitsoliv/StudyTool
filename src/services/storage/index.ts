@@ -1,6 +1,7 @@
 import { firestoreBackend } from './firestoreBackend';
 import { localBackend } from './localBackend';
 import type { StorageBackend } from './types';
+import type { UniversePrefs } from '../../types/universe';
 
 const mode = (import.meta.env.VITE_STORAGE_MODE ?? 'local').toLowerCase();
 
@@ -52,5 +53,15 @@ export const resetAll = () => storage.resetAll?.();
 export const updateEdge = (
   ...args: Parameters<StorageBackend['updateEdge']>
 ) => storage.updateEdge(...args);
+
+export const updateGraph = (
+  ...args: Parameters<StorageBackend['updateGraph']>
+) => storage.updateGraph(...args);
+
+export const getUniversePrefs = (userId: string) =>
+  storage.getUniversePrefs(userId);
+
+export const setUniversePrefs = (userId: string, prefs: UniversePrefs) =>
+  storage.setUniversePrefs(userId, prefs);
 
 export type { StorageBackend, Unsubscribe } from './types';

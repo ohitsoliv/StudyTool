@@ -22,6 +22,22 @@ export function buildShortcutRegistry(): Shortcut[] {
       },
     },
     {
+      id: 'toggle-universe',
+      keys: 'Ctrl+U',
+      label: 'Toggle Universe view',
+      group: 'view',
+      matcher: matchKey.ctrlU,
+      action: (e) => {
+        e.preventDefault();
+        const v = useViewStore.getState();
+        if (v.viewMode === 'universe') {
+          v.setViewMode('canvas');
+        } else {
+          v.setViewMode('universe');
+        }
+      },
+    },
+    {
       id: 'deselect',
       keys: 'Esc',
       label: 'Deselect node or edge',

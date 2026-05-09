@@ -1,18 +1,19 @@
 # Nexus Study Engine
 
-Last updated: 2026-05-08 (Packet 11d)
+Last updated: 2026-05-08 (Packet 14)
 
-Nexus Study Engine is a graph-first study app built with React + TypeScript. You create knowledge graphs on a canvas, attach layered content to nodes, and run drills that update mastery over time.
+Nexus Study Engine is a graph-first study app built with React + TypeScript. You create knowledge graphs on a canvas, attach layered content to nodes, run drills that update mastery over time, and explore all graphs from a universe view.
 
 ## Current Status
 
-Implemented through Packet 11d:
+Implemented through Packet 14:
 
 - Graph canvas with node and edge editing
 - 7 drill types
 - Session system (open, class-study, exam-prep)
 - Focus Workspace drill flow (idle, active, graded)
 - Right-click drill launch menus with submenu support (Packet 11d)
+- Universe view (L0) – see all graphs at once with mastery aggregates (Packet 14)
 - Settings and shortcut legend modals
 - Local-first storage plus optional Firestore backend
 - Seed graph tooling including Houseplant Care JSON dataset
@@ -56,9 +57,18 @@ Session behavior:
 - Progression is user-driven from graded state (Next drill / End session)
 - Pool-aware drill picking supports class-study tag filtering
 
+### View Modes
+
+Four view modes accessible via buttons or keyboard:
+
+- **Canvas** (Ctrl+E): Edit graphs with React Flow panning/zooming and layered node content
+- **Focus**: Practice drills with session pooling and mastery tracking
+- **Dual**: Side-by-side Canvas + Focus for simultaneous editing and drilling
+- **Universe** (Ctrl+U): Galaxy view of all graphs with aggregate mastery indicators
+
 ### Packet 11d submenu UX
 
-Context menu updates now shipped:
+Context menu updates:
 
 - Pane menu has:
   - Start a session... (flat item)
@@ -70,6 +80,26 @@ Context menu updates now shipped:
   - Hover-open with delay
   - Direction flip near right viewport edge
   - Esc and outside-click close behavior preserved
+
+### Packet 14 Universe View (L0)
+
+New **Universe** view mode:
+
+- React Flow canvas showing all graphs as draggable cards
+- Each graph card displays:
+  - Graph name with inline editing (click to rename)
+  - Semester tag (if set)
+  - Content tags (up to 3 visible + overflow counter)
+  - Aggregate mastery bar and node counts
+  - Color-coded left border reflecting graph mastery
+- Universe edges between graphs (parent-child, related, prerequisite, sequence types)
+- Right-click menus:
+  - Pane: Create new class at coordinates
+  - Node: Open graph to canvas, rename graph
+  - Edge: Change type, delete
+- Positions auto-persist to storage
+- Aggregates computed per-graph on load (filters archived nodes)
+- Quick launch: Click any graph card to jump to canvas view for that graph
 
 ### Settings and shortcuts
 
@@ -86,6 +116,7 @@ Shortcut legend is generated from the same shortcut registry used at runtime.
 Current shortcuts:
 
 - Ctrl+E: toggle canvas/focus
+- Ctrl+U: toggle universe view
 - Esc: deselect (when drill phase is idle)
 - ?: toggle shortcut legend
 - Ctrl+/: toggle shortcut legend
@@ -111,6 +142,12 @@ Configured by `VITE_STORAGE_MODE`:
 
 - local: IndexedDB backend (`src/services/storage/localBackend.ts`)
 - cloud: Firestore backend (`src/services/storage/firestoreBackend.ts`)
+
+Packet 14 updates:
+
+- Added `universePrefs` object store (IndexedDB v2) to persist universe edge data and graph positions
+- Added `updateGraph()` method to both backends for PATCH-style updates to graph metadata
+- Added `getUniversePrefs()` / `setUniversePrefs()` methods with Timestamp serialization
 
 Notes:
 
@@ -154,22 +191,25 @@ Main stores:
 - `graphStore`: graph docs, selection, CRUD, subscriptions
 - `drillStore`: drill lifecycle + grading + mastery effects
 - `sessionStore`: session lifecycle + drill progression/pooling
-- `viewStore`: canvas/focus mode and panel collapse state
+- `viewStore`: canvas/focus/dual/universe mode and panel collapse state
+- `universeStore`: universe canvas state, graph positions, edges, aggregates (Packet 14)
 - `userPrefsStore`: persisted user preferences + modal flags
 
 Main UI shells/components:
 
-- `AppShell`
-- `GraphCanvas`
-- `CanvasContextMenu`
-- `FocusWorkspace`
-- `FocusPicker`
-- `SessionModal`
-- `SessionBanner`
-- `SettingsModal`
-- `ShortcutLegendModal`
-- `Inspector`
-- `Sidebar`
+- `AppShell`: Main layout grid with view mode routing
+- `GraphCanvas`: React Flow canvas for node/edge editing
+- `UniverseCanvas`: React Flow canvas for graph galaxy view (Packet 14)
+- `GraphCard`: Reusable node component for Universe canvas (Packet 14)
+- `CanvasContextMenu`: Context menu with drill/session launch (Packet 11d)
+- `FocusWorkspace`: Drill session container with phases and grading
+- `FocusPicker`: Modal for starting a new session
+- `SessionModal`: Modal for session configuration
+- `SessionBanner`: Header showing active session progress
+- `SettingsModal`: User preferences (colors, defaults, shortcut display)
+- `ShortcutLegendModal`: Registry-driven shortcut reference
+- `Inspector`: Side panel for graph/node info
+- `Sidebar`: Left navigation with drill buttons, create graph, and view mode toggles
 
 ## Known Limitations
 

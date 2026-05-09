@@ -15,6 +15,7 @@ const isMod = (e: KeyboardEvent) => e.ctrlKey || e.metaKey;
 
 export const matchKey = {
   ctrlE: (e: KeyboardEvent) => isMod(e) && !e.shiftKey && !e.altKey && e.key.toLowerCase() === 'e',
+  ctrlU: (e: KeyboardEvent) => isMod(e) && !e.shiftKey && !e.altKey && e.key.toLowerCase() === 'u',
   ctrlShiftS: (e: KeyboardEvent) => isMod(e) && e.shiftKey && !e.altKey && e.key.toLowerCase() === 's',
   esc: (e: KeyboardEvent) => e.key === 'Escape',
   questionMark: (e: KeyboardEvent) => e.key === '?',

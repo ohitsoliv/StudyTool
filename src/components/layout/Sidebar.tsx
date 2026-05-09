@@ -16,7 +16,7 @@ import {
 } from '../../services/storage';
 
 export default function Sidebar(): JSX.Element {
-  const { sidebarCollapsed, toggleSidebar } = useViewStore();
+  const { sidebarCollapsed, toggleSidebar, viewMode, setViewMode } = useViewStore();
   const hideSidebarDrills = useUserPrefsStore((s) => s.hideSidebarDrills);
   const [graphs, setGraphs] = useState<GraphMetadata[]>([]);
   const [loading, setLoading] = useState(true);
@@ -195,6 +195,22 @@ export default function Sidebar(): JSX.Element {
           >
             Knowledge Map
           </span>
+          <button
+            type="button"
+            onClick={() => setViewMode('universe')}
+            style={{
+              padding: "6px 8px",
+              borderRadius: "6px",
+              background: viewMode === 'universe' ? "rgba(107, 138, 253, 0.15)" : "transparent",
+              color: viewMode === 'universe' ? "var(--accent)" : "var(--text)",
+              border: "1px solid var(--panel-border)",
+              textAlign: "left",
+              cursor: "pointer",
+              marginTop: "4px",
+            }}
+          >
+            Universe
+          </button>
 
           <p
             style={{

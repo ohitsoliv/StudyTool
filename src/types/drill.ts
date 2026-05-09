@@ -20,10 +20,10 @@ export interface PathFinderDrill {
   kind: 'path-finder';
   startNodeId: string;
   endNodeId: string;
-  shortestPathLength: number;
-  userPath: string[];
-  invalidAttempts: number;
-  finished: boolean;
+  shortestPathLength: number; // edge count of shortest path; for scoring
+  userPath: string[];          // ids of visited nodes in order; excludes start; ends with endNodeId on success
+  invalidAttempts: number;     // count of clicks that did not produce a valid edge traversal
+  finished: boolean;           // true once user reaches endNodeId
 }
 
 export interface MissingLinkDrill {
@@ -72,24 +72,28 @@ export interface DebuggerDrill {
   brokenVersion: string;
   input: string;
 }
+
 export type Drill = ClozeDrill | PathFinderDrill | MissingLinkDrill | ClusterTitleDrill | SorterDrill | ScenarioBuilderDrill | DebuggerDrill;
 
 export interface DrillResult {
   drill: Drill;
-  score: number;
+  score: number;        // [0, 1]
   masteryDelta: number;
+  // Cloze-only fields:
   correct?: number;
   total?: number;
+  // Path-finder-only fields:
   reachedEnd?: boolean;
   validSteps?: number;
   invalidAttempts?: number;
   shortestPathLength?: number;
+  // Scenario-builder fields:
   verdict?: 'correct' | 'partial' | 'wrong';
   problemStatement?: string;
   pipeline?: string[];
   nodesAffected?: string[];
+  // Debugger fields:
+  similarity?: number;  // 0–1
+  nodeId?: string;
+  layerDepth?: number;
 }
-
-
-
-

@@ -1,18 +1,18 @@
-﻿import type { EdgeDoc, NodeDoc } from '../types/graph';
+import type { EdgeDoc, NodeDoc } from '../types/graph';
 
 /**
  * Traversable neighbors of nodeId.
  * - parent-child / related: bidirectional
- * - prerequisite / sequence: source -> target only
+ * - prerequisite / sequence: source → target only
  */
 export function getNeighbors(nodeId: string, edges: EdgeDoc[]): Set<string> {
   const out = new Set<string>();
   for (const e of edges) {
     if (e.source === nodeId) {
-      out.add(e.target);
+      out.add(e.target); // outgoing from source — always allowed
     } else if (e.target === nodeId) {
       if (e.type === 'parent-child' || e.type === 'related') {
-        out.add(e.source);
+        out.add(e.source); // bidirectional types only
       }
     }
   }
@@ -20,8 +20,8 @@ export function getNeighbors(nodeId: string, edges: EdgeDoc[]): Set<string> {
 }
 
 /**
- * BFS shortest path length from startId to endId.
- * Returns -1 if no path. Returns 0 if startId === endId.
+ * BFS shortest path length from startId to endId using getNeighbors rules.
+ * Returns -1 if no path exists. Returns 0 if startId === endId.
  */
 export function shortestPathLength(
   startId: string,
@@ -50,16 +50,19 @@ export function shortestPathLength(
 
 /**
  * Pick a random eligible (start, end) pair such that:
- * - both nodes are non-archived
- * - there is a traversable path between them
- * - shortest path length >= 2 (not direct neighbors)
+ *   - both nodes are non-archived
+ *   - there is a path between them (using traversal rules)
+ *   - they are NOT direct neighbors (shortest-path length >= 2)
  * Returns null if no eligible pair exists.
  */
 export function findEligiblePair(
   nodes: NodeDoc[],
-  edges: EdgeDoc[]
+  edges: EdgeDoc[],
+  opts?: { poolNodeIds?: Set<string> }
 ): { startId: string; endId: string; shortestLength: number } | null {
-  const candidates = nodes.filter((n) => !n.archived);
+  const candidates = nodes.filter(
+    (n) => !n.archived && (!opts?.poolNodeIds || opts.poolNodeIds.has(n.id))
+  );
   if (candidates.length < 2) return null;
   const order = [...candidates].sort(() => Math.random() - 0.5);
   for (const start of order) {
@@ -84,7 +87,8 @@ export function findEligiblePair(
       if (id !== start.id && d >= 2) farEnough.push([id, d]);
     }
     if (farEnough.length > 0) {
-      const [endId, d] = farEnough[Math.floor(Math.random() * farEnough.length)];
+      const [endId, d] =
+        farEnough[Math.floor(Math.random() * farEnough.length)];
       return { startId: start.id, endId, shortestLength: d };
     }
   }

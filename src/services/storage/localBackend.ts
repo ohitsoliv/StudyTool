@@ -2,9 +2,10 @@ import { openDB, type IDBPDatabase } from 'idb';
 import { Timestamp } from 'firebase/firestore';
 import type { EdgeDoc, GraphMetadata, Layer, NodeDoc } from '../../types/graph';
 import type { StorageBackend, Unsubscribe } from './types';
+import type { UniversePrefs } from '../../types/universe';
 
 const DB_NAME = 'studytool-local';
-const DB_VERSION = 1;
+const DB_VERSION = 2;
 
 // ------------- Timestamp serialization -------------
 
@@ -38,6 +39,9 @@ function getDB(): Promise<IDBPDatabase> {
         if (!db.objectStoreNames.contains('edges')) {
           const edges = db.createObjectStore('edges', { keyPath: 'id' });
           edges.createIndex('graphId', 'graphId');
+        }
+        if (!db.objectStoreNames.contains('universePrefs')) {
+          db.createObjectStore('universePrefs', { keyPath: 'id' });
         }
       },
     });
@@ -210,6 +214,21 @@ export const localBackend: StorageBackend = {
     await notifyEdges(graphId);
   },
 
+  async updateGraph(_userId, graphId, patch) {
+    const db = await getDB();
+    const existing = await db.get('graphs', graphId);
+    if (!existing) throw new Error(`Graph ${graphId} not found`);
+    const current = deserializeGraph(existing);
+    const updated: GraphMetadata = {
+      ...current,
+      ...patch,
+      id: graphId,
+      createdAt: current.createdAt,
+      updatedAt: Timestamp.now(),
+    };
+    await db.put('graphs', serializeGraph(updated));
+  },
+
   async listNodes(_userId, graphId) {
     return readNodesByGraph(graphId);
   },
@@ -343,12 +362,48 @@ export const localBackend: StorageBackend = {
     };
   },
 
+  async getUniversePrefs(_userId): Promise<UniversePrefs | null> {
+    const db = await getDB();
+    const raw = await db.get('universePrefs', 'main');
+    if (!raw) return null;
+    const edges = Array.isArray(raw.edges) ? raw.edges : [];
+    return {
+      edges: edges.map((e: any) => ({
+        id: e.id,
+        source: e.source,
+        target: e.target,
+        type: e.type,
+        label: e.label,
+        createdAt: deserializeTs(e.createdAt) as Timestamp,
+      })),
+    };
+  },
+
+  async setUniversePrefs(_userId, prefs) {
+    const db = await getDB();
+    await db.put('universePrefs', {
+      id: 'main',
+      edges: prefs.edges.map((e) => ({
+        id: e.id,
+        source: e.source,
+        target: e.target,
+        type: e.type,
+        label: e.label,
+        createdAt: serializeTs(e.createdAt),
+      })),
+    });
+  },
+
   async resetAll() {
     const db = await getDB();
-    const tx = db.transaction(['graphs', 'nodes', 'edges'], 'readwrite');
+    const tx = db.transaction(
+      ['graphs', 'nodes', 'edges', 'universePrefs'],
+      'readwrite',
+    );
     await tx.objectStore('graphs').clear();
     await tx.objectStore('nodes').clear();
     await tx.objectStore('edges').clear();
+    await tx.objectStore('universePrefs').clear();
     await tx.done;
     // Notify any active subscribers that their data is now empty
     const nodeGraphIds = Array.from(nodeSubs.keys());

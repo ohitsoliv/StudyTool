@@ -8,15 +8,17 @@ import type {
   ClusterTitleDrill,
   SorterDrill,
   ScenarioBuilderDrill,
+  DebuggerDrill,
   DrillResult,
 } from '../types/drill';
 import type { EdgeDoc, EdgeType, NodeDoc } from '../types/graph';
-import { selectBlanks } from '../utils/cloze';
+import { pickRandomEligibleNode, selectBlanks } from '../utils/cloze';
 import { findEligiblePair, getNeighbors } from '../utils/pathFinding';
 import { selectMissingLinkPair } from '../utils/missingLink';
 import { selectClusterTitleParent } from '../utils/clusterTitle';
 import { selectSorterCandidate } from '../utils/sorter';
 import { matchScore } from '../utils/stringMatch';
+import { similarity } from '../utils/debugDiff';
 import { useGraphStore } from './graphStore';
 import { useViewStore } from './viewStore';
 
@@ -27,26 +29,39 @@ interface DrillStoreState {
   result: DrillResult | null;
   phase: DrillPhase;
   startCloze: (node: NodeDoc) => void;
+  startClozeRandom: (opts?: { poolNodeIds?: Set<string> }) => boolean;
   setAnswer: (blankIndex: number, value: string) => void;
   submit: () => void;
   dismiss: () => void;
-  startPathFinder: () => boolean;
+  startPathFinder: (opts?: { poolNodeIds?: Set<string> }) => boolean;
   clickPathStep: (nodeId: string) => 'valid' | 'invalid' | 'finished' | 'noop';
   giveUp: () => void;
-  startMissingLink: (nodes: NodeDoc[], edges: EdgeDoc[]) => boolean;
+  startMissingLink: (
+    nodes: NodeDoc[],
+    edges: EdgeDoc[],
+    opts?: { poolNodeIds?: Set<string> }
+  ) => boolean;
   setMissingLinkType: (type: EdgeType) => void;
   setMissingLinkJustification: (text: string) => void;
   submitMissingLink: () => Promise<boolean>;
   giveUpMissingLink: () => Promise<void>;
-  startClusterTitle: (nodes: NodeDoc[], edges: EdgeDoc[]) => boolean;
+  startClusterTitle: (
+    nodes: NodeDoc[],
+    edges: EdgeDoc[],
+    opts?: { poolNodeIds?: Set<string> }
+  ) => boolean;
   setClusterTitleInput: (text: string) => void;
   submitClusterTitle: () => Promise<boolean>;
   giveUpClusterTitle: () => Promise<void>;
-  startSorter: (nodes: NodeDoc[], edges: EdgeDoc[]) => boolean;
+  startSorter: (
+    nodes: NodeDoc[],
+    edges: EdgeDoc[],
+    opts?: { poolNodeIds?: Set<string> }
+  ) => boolean;
   assignChild: (childId: string, parentId: string | null) => void;
   submitSorter: () => Promise<void>;
   giveUpSorter: () => Promise<void>;
-  startScenarioBuilder: () => void;
+  startScenarioBuilder: (opts?: { poolNodeIds?: Set<string> }) => boolean;
   setProblemStatement: (text: string) => void;
   commitProblemStatement: () => void;
   addToPipeline: (nodeId: string) => void;
@@ -54,6 +69,13 @@ interface DrillStoreState {
   reorderPipeline: (fromIndex: number, toIndex: number) => void;
   submitScenarioBuilder: () => void;
   gradeScenarioBuilder: (verdict: 'correct' | 'partial' | 'wrong') => Promise<void>;
+  startDebugger: (
+    opts?: { nodeId?: string; layerDepth?: number },
+    randomOpts?: { poolNodeIds?: Set<string> }
+  ) => boolean;
+  setDebuggerInput: (text: string) => void;
+  submitDebugger: () => void;
+  giveUpDebugger: () => void;
 }
 
 const MIN_TEXT_LEN = 30;
@@ -65,14 +87,14 @@ function masteryDeltaFromScore(score: number): number {
   return -0.10;
 }
 
-async function applyMasteryDelta(nodeIds: string[], delta: number): Promise<void> {
-  const gs = useGraphStore.getState();
+async function applyMasteryDelta(nodeIds: string[], masteryDelta: number): Promise<void> {
+  const graphState = useGraphStore.getState();
   await Promise.all(
     nodeIds.map(async (id) => {
-      const node = gs.nodes.find((n) => n.id === id);
+      const node = graphState.nodes.find((candidate) => candidate.id === id);
       if (!node) return;
-      const newScore = Math.min(1, Math.max(0, node.mastery.score + delta));
-      await gs.updateNode(id, {
+      const newScore = Math.min(1, Math.max(0, node.mastery.score + masteryDelta));
+      await graphState.updateNode(id, {
         mastery: {
           score: newScore,
           lastReviewedAt: Timestamp.now(),
@@ -84,12 +106,12 @@ async function applyMasteryDelta(nodeIds: string[], delta: number): Promise<void
 }
 
 async function markAccessed(nodeIds: string[]): Promise<void> {
-  const gs = useGraphStore.getState();
+  const graphState = useGraphStore.getState();
   await Promise.all(
     nodeIds.map(async (id) => {
-      const node = gs.nodes.find((n) => n.id === id);
+      const node = graphState.nodes.find((candidate) => candidate.id === id);
       if (!node) return;
-      await gs.updateNode(id, {
+      await graphState.updateNode(id, {
         accessCount: (node.accessCount ?? 0) + 1,
         lastAccessedAt: Timestamp.now(),
       });
@@ -111,6 +133,8 @@ export const useDrillStore = create<DrillStoreState>((set, get) => ({
   result: null,
   phase: 'idle',
 
+  // ------------------- CLOZE (carried forward from Packet 6) -------------------
+
   startCloze: (node) => {
     let layerIndex = -1;
     let content = '';
@@ -127,7 +151,11 @@ export const useDrillStore = create<DrillStoreState>((set, get) => ({
       }
     }
     if (layerIndex === -1) return;
+
+    useViewStore.getState().setViewMode('focus');
+
     const { display, blanks } = selectBlanks(content, 0);
+
     const drill: ClozeDrill = {
       kind: 'cloze',
       nodeId: node.id,
@@ -135,17 +163,28 @@ export const useDrillStore = create<DrillStoreState>((set, get) => ({
       displayText: display,
       blanks,
     };
+
     set({ currentDrill: drill, result: null, phase: 'active' });
+
+    const newAccessCount = (node.accessCount ?? 0) + 1;
     useGraphStore.getState().updateNode(node.id, {
-      accessCount: (node.accessCount ?? 0) + 1,
+      accessCount: newAccessCount,
       lastAccessedAt: Timestamp.now(),
     });
+  },
+
+  startClozeRandom: (opts) => {
+    const node = pickRandomEligibleNode(useGraphStore.getState().nodes, opts);
+    if (!node) return false;
+    get().startCloze(node);
+    return true;
   },
 
   setAnswer: (blankIndex, value) => {
     const drill = get().currentDrill;
     if (!drill || drill.kind !== 'cloze') return;
     if (blankIndex < 0 || blankIndex >= drill.blanks.length) return;
+
     const newBlanks = drill.blanks.map((b, i) =>
       i === blankIndex ? { ...b, userAnswer: value } : b
     );
@@ -155,43 +194,94 @@ export const useDrillStore = create<DrillStoreState>((set, get) => ({
   submit: () => {
     const drill = get().currentDrill;
     if (!drill) return;
+
     if (drill.kind === 'cloze') {
       let correct = 0;
       for (const b of drill.blanks) {
-        if (b.answer.trim().toLowerCase() === b.userAnswer.trim().toLowerCase()) correct++;
+        const a = b.answer.trim().toLowerCase();
+        const u = b.userAnswer.trim().toLowerCase();
+        if (a === u) correct++;
       }
       const total = drill.blanks.length;
       const score = total > 0 ? correct / total : 0;
       const masteryDelta = masteryDeltaFromScore(score);
-      const node = useGraphStore.getState().nodes.find((n) => n.id === drill.nodeId);
+
+      const node = useGraphStore
+        .getState()
+        .nodes.find((n) => n.id === drill.nodeId);
       if (node) {
         const newScore = Math.min(1, Math.max(0, node.mastery.score + masteryDelta));
         useGraphStore.getState().updateNode(drill.nodeId, {
-          mastery: { score: newScore, lastReviewedAt: Timestamp.now(), reviewCount: node.mastery.reviewCount + 1 },
+          mastery: {
+            score: newScore,
+            lastReviewedAt: Timestamp.now(),
+            reviewCount: node.mastery.reviewCount + 1,
+          },
         });
       }
-      set({ result: { drill, score, masteryDelta, correct, total }, phase: 'graded' });
+
+      const result: DrillResult = {
+        drill,
+        score,
+        masteryDelta,
+        correct,
+        total,
+      };
+      set({ result, phase: 'graded' });
       return;
     }
+
+    // -------------------- PATH FINDER --------------------
     if (drill.kind !== 'path-finder') return;
-    if (!drill.finished) { get().giveUp(); return; }
+    if (!drill.finished) {
+      get().giveUp();
+      return;
+    }
+
     const validSteps = drill.userPath.length;
     const invalidAttempts = drill.invalidAttempts;
-    const efficiency = (validSteps + invalidAttempts) === 0 ? 1 : validSteps / (validSteps + invalidAttempts);
+    const totalAttempts = validSteps + invalidAttempts;
+    const efficiency = totalAttempts === 0 ? 1 : validSteps / totalAttempts;
+
     let score: number;
-    if (invalidAttempts === 0 && validSteps === drill.shortestPathLength) score = 1.0;
-    else if (invalidAttempts === 0) score = 0.85;
-    else score = Math.min(1, Math.max(0, efficiency * (drill.shortestPathLength / validSteps)));
+    if (invalidAttempts === 0 && validSteps === drill.shortestPathLength) {
+      score = 1.0;
+    } else if (invalidAttempts === 0) {
+      score = 0.85;
+    } else {
+      score = Math.min(
+        1,
+        Math.max(0, efficiency * (drill.shortestPathLength / validSteps))
+      );
+    }
+
     const masteryDelta = masteryDeltaFromScore(score);
-    const gs = useGraphStore.getState();
+
+    const graphState = useGraphStore.getState();
     for (const id of [drill.startNodeId, drill.endNodeId]) {
-      const n = gs.nodes.find((x) => x.id === id);
+      const n = graphState.nodes.find((x) => x.id === id);
       if (n) {
         const newScore = Math.min(1, Math.max(0, n.mastery.score + masteryDelta));
-        gs.updateNode(id, { mastery: { score: newScore, lastReviewedAt: Timestamp.now(), reviewCount: n.mastery.reviewCount + 1 } });
+        graphState.updateNode(id, {
+          mastery: {
+            score: newScore,
+            lastReviewedAt: Timestamp.now(),
+            reviewCount: n.mastery.reviewCount + 1,
+          },
+        });
       }
     }
-    set({ result: { drill, score, masteryDelta, reachedEnd: true, validSteps, invalidAttempts, shortestPathLength: drill.shortestPathLength }, phase: 'graded' });
+
+    const result: DrillResult = {
+      drill,
+      score,
+      masteryDelta,
+      reachedEnd: true,
+      validSteps,
+      invalidAttempts,
+      shortestPathLength: drill.shortestPathLength,
+    };
+    set({ result, phase: 'graded' });
   },
 
   dismiss: () => {
@@ -202,13 +292,19 @@ export const useDrillStore = create<DrillStoreState>((set, get) => ({
     if (drill?.kind === 'scenario-builder') {
       useViewStore.getState().setViewMode('canvas');
     }
+    if (drill?.kind === 'debugger') {
+      useViewStore.getState().setViewMode('canvas');
+    }
     set({ currentDrill: null, result: null, phase: 'idle' });
   },
 
-  startPathFinder: () => {
+  // ------------------- PATH FINDER actions -------------------
+
+  startPathFinder: (opts) => {
     const { nodes, edges } = useGraphStore.getState();
-    const pair = findEligiblePair(nodes, edges);
+    const pair = findEligiblePair(nodes, edges, opts);
     if (!pair) return false;
+
     const drill: PathFinderDrill = {
       kind: 'path-finder',
       startNodeId: pair.startId,
@@ -218,51 +314,96 @@ export const useDrillStore = create<DrillStoreState>((set, get) => ({
       invalidAttempts: 0,
       finished: false,
     };
+
     set({ currentDrill: drill, result: null, phase: 'active' });
-    const gs = useGraphStore.getState();
+
+    const updateNode = useGraphStore.getState().updateNode;
     for (const id of [pair.startId, pair.endId]) {
-      const n = gs.nodes.find((x) => x.id === id);
-      if (n) gs.updateNode(id, { accessCount: (n.accessCount ?? 0) + 1, lastAccessedAt: Timestamp.now() });
+      const n = useGraphStore.getState().nodes.find((x) => x.id === id);
+      if (n) {
+        updateNode(id, {
+          accessCount: (n.accessCount ?? 0) + 1,
+          lastAccessedAt: Timestamp.now(),
+        });
+      }
     }
     return true;
   },
 
   clickPathStep: (nodeId) => {
     const drill = get().currentDrill;
-    if (!drill || drill.kind !== 'path-finder' || get().phase !== 'active') return 'noop';
+    if (!drill || drill.kind !== 'path-finder' || get().phase !== 'active')
+      return 'noop';
     if (drill.finished) return 'noop';
-    const currentPos = drill.userPath.length === 0 ? drill.startNodeId : drill.userPath[drill.userPath.length - 1];
-    if (nodeId === currentPos || drill.userPath.includes(nodeId)) return 'noop';
+
+    const currentPos =
+      drill.userPath.length === 0
+        ? drill.startNodeId
+        : drill.userPath[drill.userPath.length - 1];
+
+    if (nodeId === currentPos) return 'noop';
+    if (drill.userPath.includes(nodeId)) return 'noop';
+
     const edges = useGraphStore.getState().edges;
     const neighbors = getNeighbors(currentPos, edges);
+
     if (neighbors.has(nodeId)) {
       const newPath = [...drill.userPath, nodeId];
       const finished = nodeId === drill.endNodeId;
       set({ currentDrill: { ...drill, userPath: newPath, finished } });
       return finished ? 'finished' : 'valid';
     }
-    set({ currentDrill: { ...drill, invalidAttempts: drill.invalidAttempts + 1 } });
+
+    set({
+      currentDrill: { ...drill, invalidAttempts: drill.invalidAttempts + 1 },
+    });
     return 'invalid';
   },
 
   giveUp: () => {
     const drill = get().currentDrill;
-    if (!drill || drill.kind !== 'path-finder' || get().phase !== 'active') return;
-    const gs = useGraphStore.getState();
+    if (!drill || drill.kind !== 'path-finder' || get().phase !== 'active')
+      return;
+
+    const graphState = useGraphStore.getState();
     for (const id of [drill.startNodeId, drill.endNodeId]) {
-      const n = gs.nodes.find((x) => x.id === id);
+      const n = graphState.nodes.find((x) => x.id === id);
       if (n) {
         const newScore = Math.min(1, Math.max(0, n.mastery.score - 0.10));
-        gs.updateNode(id, { mastery: { score: newScore, lastReviewedAt: Timestamp.now(), reviewCount: n.mastery.reviewCount + 1 } });
+        graphState.updateNode(id, {
+          mastery: {
+            score: newScore,
+            lastReviewedAt: Timestamp.now(),
+            reviewCount: n.mastery.reviewCount + 1,
+          },
+        });
       }
     }
-    set({ result: { drill, score: 0, masteryDelta: -0.10, reachedEnd: false, validSteps: drill.userPath.length, invalidAttempts: drill.invalidAttempts, shortestPathLength: drill.shortestPathLength }, phase: 'graded' });
+
+    const result: DrillResult = {
+      drill,
+      score: 0,
+      masteryDelta: -0.10,
+      reachedEnd: false,
+      validSteps: drill.userPath.length,
+      invalidAttempts: drill.invalidAttempts,
+      shortestPathLength: drill.shortestPathLength,
+    };
+    set({ result, phase: 'graded' });
   },
 
-  startMissingLink: (nodes, edges) => {
-    const pair = selectMissingLinkPair(nodes, edges);
+  startMissingLink: (nodes, edges, opts) => {
+    const pair = selectMissingLinkPair(nodes, edges, opts);
     if (!pair) return false;
-    const drill: MissingLinkDrill = { kind: 'missing-link', aId: pair.aId, bId: pair.bId, chosenType: null, justification: '' };
+
+    const drill: MissingLinkDrill = {
+      kind: 'missing-link',
+      aId: pair.aId,
+      bId: pair.bId,
+      chosenType: null,
+      justification: '',
+    };
+
     set({ currentDrill: drill, result: null, phase: 'active' });
     void markAccessed([pair.aId, pair.bId]);
     return true;
@@ -282,28 +423,62 @@ export const useDrillStore = create<DrillStoreState>((set, get) => ({
 
   submitMissingLink: async () => {
     const drill = get().currentDrill;
-    if (!drill || drill.kind !== 'missing-link' || get().phase !== 'active') return false;
+    if (!drill || drill.kind !== 'missing-link' || get().phase !== 'active') {
+      return false;
+    }
+
     const justification = drill.justification.trim();
     if (!drill.chosenType || justification.length < 10) return false;
-    await useGraphStore.getState().createEdge({ source: drill.aId, target: drill.bId, type: drill.chosenType, label: justification });
+
+    await useGraphStore.getState().createEdge({
+      source: drill.aId,
+      target: drill.bId,
+      type: drill.chosenType,
+      label: justification,
+    });
     await applyMasteryDelta([drill.aId, drill.bId], 0.10);
-    const gradedDrill: MissingLinkDrill = { ...drill, justification, outcome: 'passed' };
-    set({ currentDrill: gradedDrill, result: { drill: gradedDrill, score: 1, masteryDelta: 0.10 }, phase: 'graded' });
+
+    const gradedDrill: MissingLinkDrill = {
+      ...drill,
+      justification,
+      outcome: 'passed',
+    };
+    const result: DrillResult = {
+      drill: gradedDrill,
+      score: 1,
+      masteryDelta: 0.10,
+    };
+    set({ currentDrill: gradedDrill, result, phase: 'graded' });
     return true;
   },
 
   giveUpMissingLink: async () => {
     const drill = get().currentDrill;
-    if (!drill || drill.kind !== 'missing-link' || get().phase !== 'active') return;
+    if (!drill || drill.kind !== 'missing-link' || get().phase !== 'active') {
+      return;
+    }
+
     await applyMasteryDelta([drill.aId, drill.bId], -0.10);
     const gradedDrill: MissingLinkDrill = { ...drill, outcome: 'gave-up' };
-    set({ currentDrill: gradedDrill, result: { drill: gradedDrill, score: 0, masteryDelta: -0.10 }, phase: 'graded' });
+    const result: DrillResult = {
+      drill: gradedDrill,
+      score: 0,
+      masteryDelta: -0.10,
+    };
+    set({ currentDrill: gradedDrill, result, phase: 'graded' });
   },
 
-  startClusterTitle: (nodes, edges) => {
-    const selection = selectClusterTitleParent(nodes, edges);
+  startClusterTitle: (nodes, edges, opts) => {
+    const selection = selectClusterTitleParent(nodes, edges, opts);
     if (!selection) return false;
-    const drill: ClusterTitleDrill = { kind: 'cluster-title', parentId: selection.parentId, childIds: selection.childIds, userInput: '' };
+
+    const drill: ClusterTitleDrill = {
+      kind: 'cluster-title',
+      parentId: selection.parentId,
+      childIds: selection.childIds,
+      userInput: '',
+    };
+
     set({ currentDrill: drill, result: null, phase: 'active' });
     void markAccessed([selection.parentId]);
     return true;
@@ -317,32 +492,51 @@ export const useDrillStore = create<DrillStoreState>((set, get) => ({
 
   submitClusterTitle: async () => {
     const drill = get().currentDrill;
-    if (!drill || drill.kind !== 'cluster-title' || get().phase !== 'active') return false;
+    if (!drill || drill.kind !== 'cluster-title' || get().phase !== 'active') {
+      return false;
+    }
+
     const input = drill.userInput.trim();
     if (input.length < 1) return false;
-    const parent = useGraphStore.getState().nodes.find((n) => n.id === drill.parentId);
+
+    const parent = useGraphStore.getState().nodes.find((node) => node.id === drill.parentId);
     if (!parent) return false;
+
     const score = matchScore(input, parent.title);
-    const masteryDelta = score === 1.0 ? 0.10 : score === 0.9 ? 0.05 : score === 0.7 ? 0.0 : -0.10;
+    const masteryDelta =
+      score === 1.0 ? 0.10 : score === 0.9 ? 0.05 : score === 0.7 ? 0.0 : -0.10;
+
     await applyMasteryDelta([drill.parentId], masteryDelta);
     const gradedDrill: ClusterTitleDrill = { ...drill, userInput: input, score };
-    set({ currentDrill: gradedDrill, result: { drill: gradedDrill, score, masteryDelta }, phase: 'graded' });
+    const result: DrillResult = {
+      drill: gradedDrill,
+      score,
+      masteryDelta,
+    };
+    set({ currentDrill: gradedDrill, result, phase: 'graded' });
     return true;
   },
 
   giveUpClusterTitle: async () => {
     const drill = get().currentDrill;
-    if (!drill || drill.kind !== 'cluster-title' || get().phase !== 'active') return;
+    if (!drill || drill.kind !== 'cluster-title' || get().phase !== 'active') {
+      return;
+    }
+
     await applyMasteryDelta([drill.parentId], -0.10);
     const gradedDrill: ClusterTitleDrill = { ...drill, score: 0, gaveUp: true };
-    set({ currentDrill: gradedDrill, result: { drill: gradedDrill, score: 0, masteryDelta: -0.10 }, phase: 'graded' });
+    const result: DrillResult = {
+      drill: gradedDrill,
+      score: 0,
+      masteryDelta: -0.10,
+    };
+    set({ currentDrill: gradedDrill, result, phase: 'graded' });
   },
 
-  startSorter: (nodes, edges) => {
-    const candidate = selectSorterCandidate(nodes, edges);
+  startSorter: (nodes, edges, opts) => {
+    const candidate = selectSorterCandidate(nodes, edges, opts);
     if (!candidate) return false;
 
-    // Save original positions for all parents + children
     const allIds = [...candidate.parentIds, ...candidate.childIds];
     const originalPositions: Record<string, { x: number; y: number }> = {};
     for (const id of allIds) {
@@ -350,14 +544,14 @@ export const useDrillStore = create<DrillStoreState>((set, get) => ({
       if (node) originalPositions[id] = { ...node.position };
     }
 
-    // Compute scrambled positions: bottom of canvas, spread evenly
-    const allNodes = [...candidate.parentIds, ...candidate.childIds].map((id) => nodes.find((n) => n.id === id)).filter(Boolean) as NodeDoc[];
+    const allNodes = allIds.map((id) => nodes.find((n) => n.id === id)).filter(Boolean) as NodeDoc[];
     const maxY = allNodes.reduce((m, n) => Math.max(m, n.position.y), 0);
     const scrambleY = maxY + 250;
-    const parentCentroidX = candidate.parentIds.reduce((sum, id) => {
-      const n = nodes.find((x) => x.id === id);
-      return sum + (n?.position.x ?? 0);
-    }, 0) / candidate.parentIds.length;
+    const parentCentroidX =
+      candidate.parentIds.reduce((sum, id) => {
+        const n = nodes.find((x) => x.id === id);
+        return sum + (n?.position.x ?? 0);
+      }, 0) / candidate.parentIds.length;
     const spacing = 200;
     const totalWidth = (candidate.childIds.length - 1) * spacing;
     const startX = parentCentroidX - totalWidth / 2;
@@ -365,8 +559,7 @@ export const useDrillStore = create<DrillStoreState>((set, get) => ({
     const gs = useGraphStore.getState();
     for (let i = 0; i < candidate.childIds.length; i++) {
       const childId = candidate.childIds[i];
-      const scrambledPos = { x: startX + i * spacing, y: scrambleY };
-      void gs.updateNode(childId, { position: scrambledPos });
+      void gs.updateNode(childId, { position: { x: startX + i * spacing, y: scrambleY } });
     }
 
     const userAssignments: Record<string, string | null> = {};
@@ -390,12 +583,7 @@ export const useDrillStore = create<DrillStoreState>((set, get) => ({
   assignChild: (childId, parentId) => {
     const drill = get().currentDrill;
     if (!drill || drill.kind !== 'sorter' || get().phase !== 'active') return;
-    set({
-      currentDrill: {
-        ...drill,
-        userAssignments: { ...drill.userAssignments, [childId]: parentId },
-      },
-    });
+    set({ currentDrill: { ...drill, userAssignments: { ...drill.userAssignments, [childId]: parentId } } });
   },
 
   submitSorter: async () => {
@@ -404,8 +592,7 @@ export const useDrillStore = create<DrillStoreState>((set, get) => ({
     const correct = drill.childIds.filter((c) => drill.userAssignments[c] === drill.truth[c]).length;
     const score = drill.childIds.length > 0 ? correct / drill.childIds.length : 0;
     const masteryDelta = masteryDeltaFromScore(score);
-    const allIds = [...drill.parentIds, ...drill.childIds];
-    await applyMasteryDelta(allIds, masteryDelta);
+    await applyMasteryDelta([...drill.parentIds, ...drill.childIds], masteryDelta);
     const gradedDrill: SorterDrill = { ...drill, score };
     set({ currentDrill: gradedDrill, result: { drill: gradedDrill, score, masteryDelta, correct, total: drill.childIds.length }, phase: 'graded' });
   },
@@ -413,15 +600,17 @@ export const useDrillStore = create<DrillStoreState>((set, get) => ({
   giveUpSorter: async () => {
     const drill = get().currentDrill;
     if (!drill || drill.kind !== 'sorter' || get().phase !== 'active') return;
-    const allIds = [...drill.parentIds, ...drill.childIds];
-    await applyMasteryDelta(allIds, -0.10);
+    await applyMasteryDelta([...drill.parentIds, ...drill.childIds], -0.10);
     const gradedDrill: SorterDrill = { ...drill, score: 0, gaveUp: true };
     set({ currentDrill: gradedDrill, result: { drill: gradedDrill, score: 0, masteryDelta: -0.10, correct: 0, total: drill.childIds.length }, phase: 'graded' });
   },
 
-  startScenarioBuilder: () => {
+  startScenarioBuilder: (opts) => {
     const { nodes } = useGraphStore.getState();
-    if (nodes.length < 3) return;
+    const candidateNodes = opts?.poolNodeIds
+      ? nodes.filter((node) => opts.poolNodeIds?.has(node.id))
+      : nodes;
+    if (candidateNodes.length < 3) return false;
     const drill: ScenarioBuilderDrill = {
       kind: 'scenario-builder',
       problemStatement: '',
@@ -430,6 +619,7 @@ export const useDrillStore = create<DrillStoreState>((set, get) => ({
     };
     set({ currentDrill: drill, result: null, phase: 'active' });
     useViewStore.getState().setViewMode('dual');
+    return true;
   },
 
   setProblemStatement: (text) => {
@@ -450,7 +640,6 @@ export const useDrillStore = create<DrillStoreState>((set, get) => ({
     if (!drill || drill.kind !== 'scenario-builder' || drill.builderPhase !== 'building') return;
     if (drill.pipeline.includes(nodeId)) return;
     set({ currentDrill: { ...drill, pipeline: [...drill.pipeline, nodeId] } });
-
     const gs = useGraphStore.getState();
     const node = gs.nodes.find((n) => n.id === nodeId);
     if (node) {
@@ -465,8 +654,8 @@ export const useDrillStore = create<DrillStoreState>((set, get) => ({
     const drill = get().currentDrill;
     if (!drill || drill.kind !== 'scenario-builder' || drill.builderPhase !== 'building') return;
     if (index < 0 || index >= drill.pipeline.length) return;
-    const next = drill.pipeline.filter((_, i) => i !== index);
-    set({ currentDrill: { ...drill, pipeline: next } });
+    const newPipeline = drill.pipeline.filter((_, i) => i !== index);
+    set({ currentDrill: { ...drill, pipeline: newPipeline } });
   },
 
   reorderPipeline: (fromIndex, toIndex) => {
@@ -474,10 +663,10 @@ export const useDrillStore = create<DrillStoreState>((set, get) => ({
     if (!drill || drill.kind !== 'scenario-builder' || drill.builderPhase !== 'building') return;
     const len = drill.pipeline.length;
     if (fromIndex < 0 || fromIndex >= len || toIndex < 0 || toIndex >= len) return;
-    const next = [...drill.pipeline];
-    const [moved] = next.splice(fromIndex, 1);
-    next.splice(toIndex, 0, moved);
-    set({ currentDrill: { ...drill, pipeline: next } });
+    const arr = [...drill.pipeline];
+    const [item] = arr.splice(fromIndex, 1);
+    arr.splice(toIndex, 0, item);
+    set({ currentDrill: { ...drill, pipeline: arr } });
   },
 
   submitScenarioBuilder: () => {
@@ -490,6 +679,7 @@ export const useDrillStore = create<DrillStoreState>((set, get) => ({
         drill,
         score: 0,
         masteryDelta: 0,
+        verdict: undefined,
         problemStatement: drill.problemStatement,
         pipeline: [...drill.pipeline],
         nodesAffected: [],
@@ -500,30 +690,25 @@ export const useDrillStore = create<DrillStoreState>((set, get) => ({
   gradeScenarioBuilder: async (verdict) => {
     const { result } = get();
     if (!result || result.drill.kind !== 'scenario-builder' || result.verdict !== undefined) return;
-
-    const masteryDelta = verdict === 'correct' ? 0.10 : verdict === 'partial' ? 0.05 : -0.10;
-    const nodeIds = result.pipeline ?? [];
-    await applyMasteryDelta(nodeIds, masteryDelta);
-
+    const delta = verdict === 'correct' ? 0.10 : verdict === 'partial' ? 0.05 : -0.10;
+    const pipeline = result.pipeline ?? [];
+    await applyMasteryDelta(pipeline, delta);
     set({
       result: {
         ...result,
         verdict,
-        masteryDelta,
-        nodesAffected: [...nodeIds],
+        masteryDelta: delta,
+        nodesAffected: [...pipeline],
       },
     });
   },
 
-  startDebugger: (opts) => {
+  // ------------------- DEBUGGER -------------------
+
+  startDebugger: (opts, randomOpts) => {
     const { nodes } = useGraphStore.getState();
 
-    type Candidate = {
-      nodeId: string;
-      layerDepth: number;
-      layer: import('../types/graph').Layer;
-    };
-
+    type Candidate = { nodeId: string; layerDepth: number; layer: import('../types/graph').Layer; node: import('../types/graph').NodeDoc };
     const candidates: Candidate[] = [];
     for (const node of nodes) {
       if (node.archived) continue;
@@ -533,7 +718,7 @@ export const useDrillStore = create<DrillStoreState>((set, get) => ({
           layer.brokenVersion && layer.brokenVersion.trim().length > 0 &&
           layer.content && layer.content.trim().length > 0
         ) {
-          candidates.push({ nodeId: node.id, layerDepth: layer.depth, layer });
+          candidates.push({ nodeId: node.id, layerDepth: layer.depth, layer, node });
         }
       }
     }
@@ -541,15 +726,20 @@ export const useDrillStore = create<DrillStoreState>((set, get) => ({
     let chosen: Candidate | undefined;
     if (opts?.nodeId !== undefined || opts?.layerDepth !== undefined) {
       chosen = candidates.find(
-        (candidate) =>
-          (opts.nodeId === undefined || candidate.nodeId === opts.nodeId) &&
-          (opts.layerDepth === undefined || candidate.layerDepth === opts.layerDepth)
+        (c) =>
+          (opts.nodeId === undefined || c.nodeId === opts.nodeId) &&
+          (opts.layerDepth === undefined || c.layerDepth === opts.layerDepth)
       );
-    } else if (candidates.length > 0) {
-      chosen = candidates[Math.floor(Math.random() * candidates.length)];
+    } else {
+      const randomCandidates = randomOpts?.poolNodeIds
+        ? candidates.filter((candidate) => randomOpts.poolNodeIds?.has(candidate.nodeId))
+        : candidates;
+      if (randomCandidates.length > 0) {
+        chosen = randomCandidates[Math.floor(Math.random() * randomCandidates.length)];
+      }
     }
 
-    if (!chosen) return;
+    if (!chosen) return false;
 
     const drill: DebuggerDrill = {
       kind: 'debugger',
@@ -558,13 +748,14 @@ export const useDrillStore = create<DrillStoreState>((set, get) => ({
       contentType: chosen.layer.contentType as 'code' | 'math',
       language: chosen.layer.language,
       canonical: chosen.layer.content,
-      brokenVersion: chosen.layer.brokenVersion,
-      input: chosen.layer.brokenVersion,
+      brokenVersion: chosen.layer.brokenVersion!,
+      input: chosen.layer.brokenVersion!,
     };
 
     set({ currentDrill: drill, result: null, phase: 'active' });
     useViewStore.getState().setViewMode('focus');
     void markAccessed([chosen.nodeId]);
+    return true;
   },
 
   setDebuggerInput: (text) => {
@@ -580,7 +771,8 @@ export const useDrillStore = create<DrillStoreState>((set, get) => ({
     const sim = similarity(drill.canonical, drill.input);
     const masteryDelta = sim >= 0.99 ? 0.10 : sim >= 0.80 ? 0.05 : sim >= 0.50 ? 0 : -0.10;
 
-    const node = useGraphStore.getState().nodes.find((n) => n.id === drill.nodeId);
+    const { nodes } = useGraphStore.getState();
+    const node = nodes.find((n) => n.id === drill.nodeId);
     if (node) {
       const newScore = Math.min(1, Math.max(0, node.mastery.score + masteryDelta));
       void useGraphStore.getState().updateNode(drill.nodeId, {
@@ -607,7 +799,8 @@ export const useDrillStore = create<DrillStoreState>((set, get) => ({
     const drill = get().currentDrill;
     if (!drill || drill.kind !== 'debugger' || get().phase !== 'active') return;
 
-    const node = useGraphStore.getState().nodes.find((n) => n.id === drill.nodeId);
+    const { nodes } = useGraphStore.getState();
+    const node = nodes.find((n) => n.id === drill.nodeId);
     if (node) {
       const newScore = Math.min(1, Math.max(0, node.mastery.score - 0.10));
       void useGraphStore.getState().updateNode(drill.nodeId, {
@@ -630,4 +823,3 @@ export const useDrillStore = create<DrillStoreState>((set, get) => ({
     set({ result, phase: 'graded' });
   },
 }));
-

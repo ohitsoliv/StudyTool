@@ -1,4 +1,5 @@
 ﻿import type { NodeDoc, EdgeDoc, GraphMetadata } from '../../types/graph';
+import type { UniversePrefs } from '../../types/universe';
 
 export type Unsubscribe = () => void;
 
@@ -8,6 +9,11 @@ export interface StorageBackend {
   listGraphs(userId: string): Promise<GraphMetadata[]>;
   createGraph(userId: string, name: string): Promise<string>;
   deleteGraph(userId: string, graphId: string): Promise<void>;
+  updateGraph(
+    userId: string,
+    graphId: string,
+    patch: Partial<GraphMetadata>,
+  ): Promise<void>;
 
   listNodes(userId: string, graphId: string): Promise<NodeDoc[]>;
   createNode(
@@ -46,6 +52,9 @@ export interface StorageBackend {
     graphId: string,
     callback: (edges: EdgeDoc[]) => void,
   ): Unsubscribe;
+
+  getUniversePrefs(userId: string): Promise<UniversePrefs | null>;
+  setUniversePrefs(userId: string, prefs: UniversePrefs): Promise<void>;
 
   resetAll?(): Promise<void>;
 }

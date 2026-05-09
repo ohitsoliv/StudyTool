@@ -1,6 +1,7 @@
 import Sidebar from "./Sidebar";
 import Inspector from "./Inspector";
 import GraphCanvas from "../canvas/GraphCanvas";
+import UniverseCanvas from "../canvas/UniverseCanvas";
 import FocusWorkspace from "../workspace/FocusWorkspace";
 import { useViewStore } from "../../store/viewStore";
 
@@ -23,7 +24,9 @@ export default function AppShell(): JSX.Element {
       <Sidebar />
 
       <main style={{ overflow: "hidden", position: "relative" }}>
-        {viewMode === "canvas" ? (
+        {viewMode === "universe" ? (
+          <UniverseCanvas />
+        ) : viewMode === "canvas" ? (
           <GraphCanvas />
         ) : viewMode === "dual" ? (
           <div style={{ display: "flex", width: "100%", height: "100%" }}>
