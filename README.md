@@ -150,6 +150,7 @@ Other Packet 16 behavior:
 - StudyNode highlights selected bridge endpoints during active Bridge drill
 - Session auto-rotation includes Bridge, Example, and Stub-fill via lens mapping and eligibility checks
 - Generative drill form fields include explicit `id`/`name` attributes for browser autofill and audit compatibility
+- Debugger + Inspector editors use native textareas (CSP-safe; no Monaco/eval dependency)
 
 ### Settings and shortcuts
 
@@ -184,7 +185,6 @@ Current shortcuts:
 - @xyflow/react
 - Firebase SDK
 - IndexedDB via idb
-- Monaco editor (code layers)
 
 ## Storage Modes
 

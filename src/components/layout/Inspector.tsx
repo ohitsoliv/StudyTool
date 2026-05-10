@@ -1,6 +1,5 @@
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useState } from "react";
 import { PanelRight } from "lucide-react";
-import Editor from "@monaco-editor/react";
 import { Timestamp } from "firebase/firestore";
 import { useViewStore } from "../../store/viewStore";
 import { useGraphStore } from "../../store/graphStore";
@@ -20,8 +19,6 @@ function LayerCard({ nodeId, layer, index, onPatch }: LayerCardProps): JSX.Eleme
   const [localLang, setLocalLang] = useState(layer.language ?? "c");
   const [localBroken, setLocalBroken] = useState(layer.brokenVersion ?? "");
   const [brokenOpen, setBrokenOpen] = useState(!!(layer.brokenVersion && layer.brokenVersion.trim().length > 0));
-  const contentRef = useRef(localContent);
-  const brokenRef = useRef(localBroken);
 
   useEffect(() => {
     setLocalContent(layer.content);
@@ -34,14 +31,6 @@ function LayerCard({ nodeId, layer, index, onPatch }: LayerCardProps): JSX.Eleme
   useEffect(() => {
     setLocalBroken(layer.brokenVersion ?? "");
   }, [layer.brokenVersion]);
-
-  useEffect(() => {
-    contentRef.current = localContent;
-  }, [localContent]);
-
-  useEffect(() => {
-    brokenRef.current = localBroken;
-  }, [localBroken]);
 
   const flush = (nextContent: string): void => {
     if (nextContent !== layer.content) {
@@ -120,43 +109,25 @@ function LayerCard({ nodeId, layer, index, onPatch }: LayerCardProps): JSX.Eleme
         )}
       </div>
 
-      {layer.contentType === "code" ? (
-        <div style={{ border: "1px solid var(--panel-border)", borderRadius: 6, overflow: "hidden" }}>
-          <Editor
-            height="180px"
-            theme="vs-dark"
-            language={localLang || "c"}
-            value={localContent}
-            onChange={(value) => handleContentChange(value ?? "")}
-            onMount={(editor) => {
-              editor.onDidBlurEditorWidget(() => flush(contentRef.current));
-            }}
-            options={{
-              minimap: { enabled: false },
-              fontSize: 12,
-              lineNumbers: "off",
-              wordWrap: "on",
-              padding: { top: 8, bottom: 8 },
-            }}
-          />
-        </div>
-      ) : (
-        <textarea
-          value={localContent}
-          onChange={(e) => handleContentChange(e.target.value)}
-          onBlur={() => flush(localContent)}
-          rows={6}
-          style={{
-            width: "100%",
-            resize: "vertical",
-            background: "#0f0f12",
-            border: "1px solid var(--panel-border)",
-            color: "var(--text)",
-            borderRadius: 6,
-            padding: 8,
-          }}
-        />
-      )}
+      <textarea
+        id={`layer-content-${nodeId}-${index}`}
+        name={`layerContent${index}`}
+        value={localContent}
+        onChange={(e) => handleContentChange(e.target.value)}
+        onBlur={() => flush(localContent)}
+        rows={6}
+        spellCheck={layer.contentType !== 'code'}
+        style={{
+          width: "100%",
+          resize: "vertical",
+          background: "#0f0f12",
+          border: "1px solid var(--panel-border)",
+          color: "var(--text)",
+          borderRadius: 6,
+          padding: 8,
+          fontFamily: layer.contentType === 'code' ? 'monospace' : 'inherit',
+        }}
+      />
 
       {/* Broken version section — only for code/math layers */}
       {(layer.contentType === "code" || layer.contentType === "math") && (
@@ -181,44 +152,26 @@ function LayerCard({ nodeId, layer, index, onPatch }: LayerCardProps): JSX.Eleme
 
           {brokenOpen && (
             <div style={{ marginTop: 6, display: "flex", flexDirection: "column", gap: 6 }}>
-              {layer.contentType === "code" ? (
-                <div style={{ border: "1px solid var(--panel-border)", borderRadius: 6, overflow: "hidden" }}>
-                  <Editor
-                    height="140px"
-                    theme="vs-dark"
-                    language={localLang || "c"}
-                    value={localBroken}
-                    onChange={(value) => setLocalBroken(value ?? "")}
-                    onMount={(editor) => {
-                      editor.onDidBlurEditorWidget(() => flushBroken(brokenRef.current));
-                    }}
-                    options={{
-                      minimap: { enabled: false },
-                      fontSize: 12,
-                      lineNumbers: "off",
-                      wordWrap: "on",
-                      padding: { top: 8, bottom: 8 },
-                    }}
-                  />
-                </div>
-              ) : (
-                <textarea
-                  value={localBroken}
-                  onChange={(e) => setLocalBroken(e.target.value)}
-                  onBlur={() => flushBroken(localBroken)}
-                  rows={4}
-                  placeholder="Paste a buggy/incomplete version here…"
-                  style={{
-                    width: "100%",
-                    resize: "vertical",
-                    background: "#0f0f12",
-                    border: "1px solid var(--panel-border)",
-                    color: "var(--text)",
-                    borderRadius: 6,
-                    padding: 8,
-                  }}
-                />
-              )}
+              <textarea
+                id={`layer-broken-${nodeId}-${index}`}
+                name={`layerBroken${index}`}
+                value={localBroken}
+                onChange={(e) => setLocalBroken(e.target.value)}
+                onBlur={() => flushBroken(localBroken)}
+                rows={4}
+                placeholder="Paste a buggy/incomplete version here…"
+                spellCheck={layer.contentType !== 'code'}
+                style={{
+                  width: "100%",
+                  resize: "vertical",
+                  background: "#0f0f12",
+                  border: "1px solid var(--panel-border)",
+                  color: "var(--text)",
+                  borderRadius: 6,
+                  padding: 8,
+                  fontFamily: layer.contentType === 'code' ? 'monospace' : 'inherit',
+                }}
+              />
 
               <button
                 type="button"

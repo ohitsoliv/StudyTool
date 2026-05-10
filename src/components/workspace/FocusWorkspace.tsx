@@ -1,6 +1,5 @@
 ﻿import { useEffect, useRef, useState } from 'react';
 import type { CSSProperties, KeyboardEvent } from 'react';
-import Editor from '@monaco-editor/react';
 import { useDrillStore } from '../../store/drillStore';
 import { useGraphStore } from '../../store/graphStore';
 import { useViewStore } from '../../store/viewStore';
@@ -940,43 +939,27 @@ export default function FocusWorkspace() {
                   Fix the broken version below so it matches the canonical content.
                 </div>
                 <div style={{ flex: 1, minHeight: 0, marginBottom: 16 }}>
-                  {drill.contentType === 'code' ? (
-                    <div style={{ border: '1px solid var(--panel-border)', borderRadius: 6, overflow: 'hidden', height: '100%' }}>
-                      <Editor
-                        height="100%"
-                        theme="vs-dark"
-                        language={drill.language ?? 'plaintext'}
-                        value={drill.input}
-                        onChange={(value) => setDebuggerInput(value ?? '')}
-                        options={{
-                          minimap: { enabled: false },
-                          fontSize: 13,
-                          wordWrap: 'on',
-                          padding: { top: 10, bottom: 10 },
-                          scrollBeyondLastLine: false,
-                        }}
-                      />
-                    </div>
-                  ) : (
-                    <textarea
-                      value={drill.input}
-                      onChange={(e) => setDebuggerInput(e.target.value)}
-                      style={{
-                        width: '100%',
-                        height: '100%',
-                        resize: 'none',
-                        background: '#0f0f12',
-                        border: '1px solid var(--panel-border)',
-                        color: 'var(--text)',
-                        borderRadius: 6,
-                        padding: 10,
-                        fontFamily: 'monospace',
-                        fontSize: 13,
-                        outline: 'none',
-                        boxSizing: 'border-box',
-                      }}
-                    />
-                  )}
+                  <textarea
+                    id="debugger-drill-input"
+                    name="debuggerDrillInput"
+                    value={drill.input}
+                    onChange={(e) => setDebuggerInput(e.target.value)}
+                    spellCheck={false}
+                    style={{
+                      width: '100%',
+                      height: '100%',
+                      resize: 'none',
+                      background: '#0f0f12',
+                      border: '1px solid var(--panel-border)',
+                      color: 'var(--text)',
+                      borderRadius: 6,
+                      padding: 10,
+                      fontFamily: 'monospace',
+                      fontSize: 13,
+                      outline: 'none',
+                      boxSizing: 'border-box',
+                    }}
+                  />
                 </div>
                 <div style={{ display: 'flex', gap: 10, flexShrink: 0 }}>
                   <button onClick={submitDebugger} style={primaryBtnStyle}>Submit</button>
