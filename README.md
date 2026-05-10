@@ -1,20 +1,21 @@
 # Nexus Study Engine
 
-Last updated: 2026-05-09 (Packet 15)
+Last updated: 2026-05-10 (Packet 16)
 
 Nexus Study Engine is a graph-first study app built with React + TypeScript. You create knowledge graphs on a canvas, attach layered content to nodes, run drills that update mastery over time, descend into child graphs, and explore top-level graphs from a universe view.
 
 ## Current Status
 
-Implemented through Packet 15:
+Implemented through Packet 16:
 
 - Graph canvas with node and edge editing
-- 7 drill types
+- 10 drill types including generative drills (Bridge, Example, Stub-fill)
 - Session system (open, class-study, exam-prep)
 - Focus Workspace drill flow (idle, active, graded)
 - Right-click drill launch menus with submenu support (Packet 11d)
 - Universe view (L0) for top-level graphs with mastery aggregates (Packet 14)
 - Child graph containers + breadcrumb navigation across graph depth (Packet 15)
+- Generative drill system + bridge overlay + node-targeted study extensions (Packet 16)
 - Settings and shortcut legend modals
 - Local-first storage plus optional Firestore backend
 - Seed graph tooling including Houseplant Care JSON dataset
@@ -41,6 +42,9 @@ Available drills:
 - Sorter
 - Scenario Builder
 - Debugger
+- Bridge
+- Example
+- Stub-fill
 
 Drills run in Focus Workspace and write mastery updates back to node docs.
 
@@ -73,9 +77,9 @@ Context menu updates:
 
 - Pane menu has:
   - Start a session... (flat item)
-  - Start a drill -> submenu (Path Finder, Missing Link, Cluster Title, Sorter, Scenario Builder, Debugger random)
+  - Start a drill -> submenu (Path Finder, Missing Link, Cluster Title, Sorter, Scenario Builder, Debugger random, Bridge, Example, Stub-fill)
 - Node menu has:
-  - Study this node -> submenu (Cloze, Debugger)
+  - Study this node -> submenu (Cloze, Debugger, Example, Stub-fill)
   - Parent item disables when neither child drill is eligible
 - Submenu behavior:
   - Hover-open with delay
@@ -121,6 +125,30 @@ Nodes can act as containers that descend into a child graph:
 - Sidebar behavior:
   - Breadcrumb appears above Graphs for nested navigation and inline rename of current crumb
   - Graph list shows top-level graphs only
+
+### Packet 16 Generative Drills
+
+Added three generative drill flows with asymmetric grading (create/fill gives +0.05 mastery, cancel gives 0):
+
+- Bridge (architect lens):
+  - Starts in dual view and overlays controls on canvas
+  - User selects two nodes, chooses edge type, and enters label (minimum 5 chars)
+  - Creates edge and applies +0.05 mastery to both endpoints
+  - Dismiss restores canvas view
+- Example (practitioner lens):
+  - Targets node with non-empty Layer 1 text (random or node-scoped)
+  - Requires user input of at least 10 chars
+  - Creates new "Example: ..." node, links it as related, and applies +0.05 to source node
+- Stub-fill (memorizer lens):
+  - Targets empty or missing Layer 1 text node (random or node-scoped)
+  - Requires user input of at least 10 chars
+  - Fills Layer 1 content in place and applies +0.05 to target node
+
+Other Packet 16 behavior:
+
+- Defensive guard prevents child-graph double-click navigation during any active drill
+- StudyNode highlights selected bridge endpoints during active Bridge drill
+- Session auto-rotation includes Bridge, Example, and Stub-fill via lens mapping and eligibility checks
 
 ### Settings and shortcuts
 
@@ -170,6 +198,12 @@ Packet 14/15 updates:
 - Added `updateGraph()` method to both backends for PATCH-style updates to graph metadata
 - Added `getUniversePrefs()` / `setUniversePrefs()` methods with Timestamp serialization
 - Child graph links are persisted via graph/node patch writes (`childGraphId`, `parentNodeId`, `parentGraphId`)
+
+Packet 16 updates:
+
+- Drill kind union expanded with `bridge`, `example`, and `stub-fill`
+- Session lens map and random drill progression include all three new drill kinds
+- New eligibility helpers added in `src/utils/drillEligibility.ts` (`canBridge`, `canExample`, `canStubFill`)
 
 Notes:
 
@@ -263,5 +297,11 @@ Packet 15 also adds:
 
 - `src/components/layout/Breadcrumb.tsx`
 - `src/utils/graphHierarchy.ts`
+
+Packet 16 also adds:
+
+- `src/components/canvas/BridgeOverlay.tsx`
+- `src/components/workspace/ExampleDrill.tsx`
+- `src/components/workspace/StubFillDrill.tsx`
 
 If major architecture or packet milestones change, update this README in the same commit.
