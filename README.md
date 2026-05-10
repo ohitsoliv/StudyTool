@@ -1,19 +1,20 @@
 # Nexus Study Engine
 
-Last updated: 2026-05-08 (Packet 14)
+Last updated: 2026-05-09 (Packet 15)
 
-Nexus Study Engine is a graph-first study app built with React + TypeScript. You create knowledge graphs on a canvas, attach layered content to nodes, run drills that update mastery over time, and explore all graphs from a universe view.
+Nexus Study Engine is a graph-first study app built with React + TypeScript. You create knowledge graphs on a canvas, attach layered content to nodes, run drills that update mastery over time, descend into child graphs, and explore top-level graphs from a universe view.
 
 ## Current Status
 
-Implemented through Packet 14:
+Implemented through Packet 15:
 
 - Graph canvas with node and edge editing
 - 7 drill types
 - Session system (open, class-study, exam-prep)
 - Focus Workspace drill flow (idle, active, graded)
 - Right-click drill launch menus with submenu support (Packet 11d)
-- Universe view (L0) – see all graphs at once with mastery aggregates (Packet 14)
+- Universe view (L0) for top-level graphs with mastery aggregates (Packet 14)
+- Child graph containers + breadcrumb navigation across graph depth (Packet 15)
 - Settings and shortcut legend modals
 - Local-first storage plus optional Firestore backend
 - Seed graph tooling including Houseplant Care JSON dataset
@@ -64,7 +65,7 @@ Four view modes accessible via buttons or keyboard:
 - **Canvas** (Ctrl+E): Edit graphs with React Flow panning/zooming and layered node content
 - **Focus**: Practice drills with session pooling and mastery tracking
 - **Dual**: Side-by-side Canvas + Focus for simultaneous editing and drilling
-- **Universe** (Ctrl+U): Galaxy view of all graphs with aggregate mastery indicators
+- **Universe** (Ctrl+U): Galaxy view of top-level graphs with aggregate mastery indicators
 
 ### Packet 11d submenu UX
 
@@ -85,7 +86,7 @@ Context menu updates:
 
 New **Universe** view mode:
 
-- React Flow canvas showing all graphs as draggable cards
+- React Flow canvas showing top-level graphs as draggable cards
 - Each graph card displays:
   - Graph name with inline editing (click to rename)
   - Semester tag (if set)
@@ -100,6 +101,26 @@ New **Universe** view mode:
 - Positions auto-persist to storage
 - Aggregates computed per-graph on load (filters archived nodes)
 - Quick launch: Click any graph card to jump to canvas view for that graph
+- Child graphs are intentionally excluded from Universe and entered from their parent node
+
+### Packet 15 Child Graphs
+
+Nodes can act as containers that descend into a child graph:
+
+- Node model supports optional `childGraphId`
+- Graph metadata includes `parentNodeId` + `parentGraphId` pointers
+- Double-click a container node to enter its child graph
+- Node context menu supports:
+  - Create child graph
+  - Open child graph
+  - Unlink child graph (returns orphaned child to top-level Universe)
+- Container indicator (`↘`) renders on study nodes with child graphs
+- Inspector behavior:
+  - Leaf node: Study button + Layers section remain available
+  - Container node: Container panel with Open/Unlink actions; Layers and Study button hidden
+- Sidebar behavior:
+  - Breadcrumb appears above Graphs for nested navigation and inline rename of current crumb
+  - Graph list shows top-level graphs only
 
 ### Settings and shortcuts
 
@@ -143,11 +164,12 @@ Configured by `VITE_STORAGE_MODE`:
 - local: IndexedDB backend (`src/services/storage/localBackend.ts`)
 - cloud: Firestore backend (`src/services/storage/firestoreBackend.ts`)
 
-Packet 14 updates:
+Packet 14/15 updates:
 
 - Added `universePrefs` object store (IndexedDB v2) to persist universe edge data and graph positions
 - Added `updateGraph()` method to both backends for PATCH-style updates to graph metadata
 - Added `getUniversePrefs()` / `setUniversePrefs()` methods with Timestamp serialization
+- Child graph links are persisted via graph/node patch writes (`childGraphId`, `parentNodeId`, `parentGraphId`)
 
 Notes:
 
@@ -209,7 +231,8 @@ Main UI shells/components:
 - `SettingsModal`: User preferences (colors, defaults, shortcut display)
 - `ShortcutLegendModal`: Registry-driven shortcut reference
 - `Inspector`: Side panel for graph/node info
-- `Sidebar`: Left navigation with drill buttons, create graph, and view mode toggles
+- `Sidebar`: Left navigation with drill buttons, create graph, breadcrumb, and view mode toggles
+- `Breadcrumb`: Nested graph navigation and inline rename for current crumb (Packet 15)
 
 ## Known Limitations
 
@@ -235,5 +258,10 @@ src/
   types/
   utils/
 ```
+
+Packet 15 also adds:
+
+- `src/components/layout/Breadcrumb.tsx`
+- `src/utils/graphHierarchy.ts`
 
 If major architecture or packet milestones change, update this README in the same commit.
