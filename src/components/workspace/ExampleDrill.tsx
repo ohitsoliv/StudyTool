@@ -109,6 +109,8 @@ export function ExampleDrill() {
           Give a concrete example or counterexample.
         </div>
         <textarea
+          id="example-drill-input"
+          name="exampleDrillInput"
           value={activeDrill.userInput}
           onChange={(e) => setExampleInput(e.target.value)}
           autoFocus

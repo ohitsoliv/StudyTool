@@ -153,6 +153,8 @@ export function BridgeOverlay() {
 
             <div>
               <input
+                id="bridge-drill-label"
+                name="bridgeDrillLabel"
                 type="text"
                 value={label}
                 onChange={(e) => setBridgeLabel(e.target.value)}

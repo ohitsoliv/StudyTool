@@ -126,6 +126,8 @@ export function StubFillDrill() {
         )}
 
         <textarea
+          id="stub-fill-drill-input"
+          name="stubFillDrillInput"
           value={activeDrill.userInput}
           onChange={(e) => setStubFillInput(e.target.value)}
           autoFocus
