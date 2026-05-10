@@ -80,6 +80,7 @@ function GraphCanvasInner() {
           layerCount: n.layers?.length ?? 0,
           layers: n.layers ?? [],
           zoomLevel,
+          hasChildGraph: !!n.childGraphId,
         },
         selected: n.id === selectedNodeId,
       })),
@@ -150,6 +151,18 @@ function GraphCanvasInner() {
       if (id) selectEdge(id);
     },
     [createEdge, selectEdge, drillPhase]
+  );
+
+  const onNodeDoubleClick = useCallback(
+    (_e: React.MouseEvent, node: Node) => {
+      const sourceNode = useGraphStore
+        .getState()
+        .nodes.find((n) => n.id === node.id);
+      if (sourceNode?.childGraphId) {
+        useGraphStore.getState().setCurrentGraph(sourceNode.childGraphId);
+      }
+    },
+    []
   );
 
   const onNodeClick = useCallback(
@@ -394,6 +407,37 @@ function GraphCanvasInner() {
         },
         {
           label: 'Duplicate',
+                  ...(node.childGraphId
+                    ? [
+                        {
+                          label: 'Open child graph',
+                          onClick: () => {
+                            if (node.childGraphId) {
+                              useGraphStore
+                                .getState()
+                                .setCurrentGraph(node.childGraphId);
+                            }
+                          },
+                        },
+                        {
+                          label: 'Unlink child graph',
+                          onClick: () => {
+                            void useGraphStore
+                              .getState()
+                              .unlinkChildGraph(nodeId);
+                          },
+                        },
+                      ]
+                    : [
+                        {
+                          label: 'Create child graph',
+                          onClick: () => {
+                            void useGraphStore
+                              .getState()
+                              .createChildGraph(nodeId);
+                          },
+                        },
+                      ]),
           onClick: async () => {
             const src = nodes.find((n) => n.id === nodeId);
             if (!src) return;
@@ -470,6 +514,7 @@ function GraphCanvasInner() {
         onNodeDragStop={onNodeDragStop}
         onConnect={onConnect}
         onNodeClick={onNodeClick}
+        onNodeDoubleClick={onNodeDoubleClick}
         onEdgeClick={onEdgeClick}
         onPaneClick={onPaneClick}
         onPaneContextMenu={onPaneContextMenu}

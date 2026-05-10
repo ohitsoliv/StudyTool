@@ -11,6 +11,7 @@ export interface StudyNodeData extends Record<string, unknown> {
   layerCount: number;
   layers: Layer[];
   zoomLevel: number;
+  hasChildGraph: boolean;
 }
 
 type StudyNodeType = Node<StudyNodeData, 'study'>;
@@ -201,6 +202,23 @@ function StudyNode({ data, selected, id }: NodeProps<StudyNodeType>) {
           background: '#6b8afd',
           opacity: 0.5,
         }} />
+      )}
+      {data.hasChildGraph && (
+        <div
+          title="Has a child graph. Double-click to enter."
+          style={{
+            position: 'absolute',
+            bottom: 6,
+            left: 10,
+            fontSize: 11,
+            color: 'var(--accent)',
+            opacity: 0.85,
+            lineHeight: 1,
+            pointerEvents: 'none',
+          }}
+        >
+          ↘
+        </div>
       )}
 
       {isMissingLinkNode && (

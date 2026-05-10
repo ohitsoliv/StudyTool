@@ -66,7 +66,10 @@ export const useUniverseStore = create<UniverseState>((set, get) => ({
     set({ loading: true });
     const userId = getUserId();
 
-    const graphs = await listGraphs(userId);
+    const allGraphs = await listGraphs(userId);
+    const graphs = allGraphs.filter(
+      (g) => !g.parentNodeId && !g.parentGraphId,
+    );
     const prefs = await getUniversePrefs(userId);
     const edges = prefs?.edges ?? [];
 

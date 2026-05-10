@@ -2,6 +2,7 @@
 import { useUserPrefsStore } from "../../store/userPrefsStore";
 import { PanelLeft, Settings } from "lucide-react";
 import { useGraphStore } from "../../store/graphStore";
+import Breadcrumb from "./Breadcrumb";
 import { GraphMetadata } from "../../types/graph";
 import { seedGraph, seedLinearAlgebra, seedLgbtqIdentityVocabulary, seedHouseplantCare } from "../../scripts/seedGraph";
 import { useViewStore } from "../../store/viewStore";
@@ -72,6 +73,9 @@ export default function Sidebar(): JSX.Element {
     setLoading(false);
   };
 
+  const topLevelGraphs = graphs.filter(
+    (g) => !g.parentNodeId && !g.parentGraphId,
+  );
   useEffect(() => {
     void fetchGraphs();
   }, []);
@@ -212,6 +216,7 @@ export default function Sidebar(): JSX.Element {
             Universe
           </button>
 
+          <Breadcrumb graphs={graphs} onGraphsChanged={fetchGraphs} />
           <p
             style={{
               color: "var(--text-muted)",
@@ -229,13 +234,13 @@ export default function Sidebar(): JSX.Element {
               Loading...
             </p>
           )}
-          {!loading && graphs.length === 0 && (
+          {!loading && topLevelGraphs.length === 0 && (
             <p style={{ color: "var(--text-muted, #888)", fontSize: 14, padding: "0 4px" }}>
-              No graphs yet.
+              No top-level graphs yet.
             </p>
           )}
 
-          {graphs.map((g) => (
+          {topLevelGraphs.map((g) => (
             <button
               key={g.id}
               onClick={() => setCurrentGraph(g.id)}

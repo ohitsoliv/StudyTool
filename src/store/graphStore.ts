@@ -12,6 +12,8 @@ import {
   createEdge,
   updateEdge as fsUpdateEdge,
   deleteEdge as fsDeleteEdge,
+  createGraph as fsCreateGraph,
+  updateGraph as fsUpdateGraph,
 } from '../services/storage';
 
 interface GraphState {
@@ -117,6 +119,54 @@ export const useGraphStore = create<GraphState>((set, get) => ({
     if (!currentGraphId) throw new Error('No graph selected');
     await fsDeleteEdge(getUserId(), currentGraphId, edgeId);
   },
+
+  async createChildGraph(sourceNodeId) {
+    const { currentGraphId, nodes } = get();
+    if (!currentGraphId) return null;
+    const sourceNode = nodes.find((n) => n.id === sourceNodeId);
+    if (!sourceNode) return null;
+    if (sourceNode.childGraphId) {
+      // Already has a child — just enter it
+      get().setCurrentGraph(sourceNode.childGraphId);
+      return sourceNode.childGraphId;
+    }
+    const userId = getUserId();
+    const childName = sourceNode.title || 'Untitled';
+    const childGraphId = await fsCreateGraph(userId, childName);
+    try {
+      await fsUpdateGraph(userId, childGraphId, {
+        parentNodeId: sourceNodeId,
+        parentGraphId: currentGraphId,
+      });
+      await fsUpdateNode(userId, currentGraphId, sourceNodeId, {
+        childGraphId,
+      });
+    } catch (err) {
+      console.error('[graphStore] createChildGraph link write failed', err);
+    }
+    get().setCurrentGraph(childGraphId);
+    return childGraphId;
+  },
+
+  async unlinkChildGraph(sourceNodeId) {
+    const { currentGraphId, nodes } = get();
+    if (!currentGraphId) return;
+    const sourceNode = nodes.find((n) => n.id === sourceNodeId);
+    if (!sourceNode || !sourceNode.childGraphId) return;
+    const childGraphId = sourceNode.childGraphId;
+    const userId = getUserId();
+    try {
+      await fsUpdateNode(userId, currentGraphId, sourceNodeId, {
+        childGraphId: null,
+      });
+      await fsUpdateGraph(userId, childGraphId, {
+        parentNodeId: null,
+        parentGraphId: null,
+      });
+    } catch (err) {
+      console.error('[graphStore] unlinkChildGraph write failed', err);
+    }
+  },
 }));
 
 export function getSelectedEntity():
@@ -133,4 +183,6 @@ export function getSelectedEntity():
     if (node) return { kind: 'node', node };
   }
   return null;
+  createChildGraph: (sourceNodeId: string) => Promise<string | null>;
+  unlinkChildGraph: (sourceNodeId: string) => Promise<void>;
 }

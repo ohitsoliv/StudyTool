@@ -32,6 +32,7 @@ export interface NodeDoc {
   clusterId: string | null;
   accessCount: number;              // default 0; incremented on drill start
   lastAccessedAt: Timestamp | null; // default null; set on drill start
+  childGraphId?: string | null;     // null = leaf with layers; string = container, points at child graph
 }
 
 export interface EdgeDoc {
@@ -59,4 +60,6 @@ export interface GraphMetadata {
   tags?: string[];
   semester?: string | null;
   universePosition?: { x: number; y: number } | null;
+  parentNodeId?: string | null;     // null/undefined = top-level graph
+  parentGraphId?: string | null;    // null/undefined = top-level graph; id of graph containing parentNodeId
 }

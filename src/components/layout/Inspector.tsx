@@ -472,7 +472,7 @@ export default function Inspector(): JSX.Element {
                 );
               })()}
 
-              {node && (
+              {node && !node.childGraphId && (
                 <div style={{ marginTop: 12, marginBottom: 12 }}>
                   <button
                     type="button"
@@ -506,50 +506,123 @@ export default function Inspector(): JSX.Element {
                 </div>
               )}
 
-              <section style={{ display: "flex", flexDirection: "column", gap: 10 }}>
-                <p style={{ fontSize: 12, color: "var(--text-muted)" }}>Layers</p>
-                <div style={{ maxHeight: 400, overflowY: "auto", display: "flex", flexDirection: "column", gap: 10 }}>
-                  {node.layers.map((layer, index) => (
-                    <LayerCard
-                      key={`${node.id}-${layer.depth}-${index}`}
-                      nodeId={node.id}
-                      layer={layer}
-                      index={index}
-                      onPatch={(patch) => patchLayer(index, patch)}
-                    />
-                  ))}
-                </div>
-                <button
-                  onClick={() => {
-                    const existingDepths = node.layers.map((l) => l.depth);
-                    const newDepth = existingDepths.length === 0 ? 1 : Math.max(...existingDepths) + 1;
-                    const newLayer: Layer = {
-                      depth: newDepth,
-                      content: "",
-                      contentType: "text",
-                      createdAt: Timestamp.now(),
-                    };
-                    void updateNode(node.id, { layers: [...node.layers, newLayer] });
-                  }}
+              {node && node.childGraphId && (
+                <div
                   style={{
-                    width: '100%',
-                    marginTop: 8,
-                    padding: '8px 12px',
-                    background: 'transparent',
-                    border: '1px dashed rgba(107, 138, 253, 0.5)',
+                    marginTop: 12,
+                    marginBottom: 12,
+                    padding: 12,
+                    border: '1px solid var(--panel-border)',
                     borderRadius: 6,
-                    color: '#6b8afd',
-                    fontSize: 12,
-                    cursor: 'pointer',
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                    gap: 6,
+                    background: 'rgba(107,138,253,0.06)',
                   }}
                 >
-                  + Add Layer
-                </button>
-              </section>
+                  <div
+                    style={{
+                      fontSize: 11,
+                      color: 'var(--text-muted)',
+                      textTransform: 'uppercase',
+                      letterSpacing: 0.5,
+                      marginBottom: 6,
+                    }}
+                  >
+                    Container
+                  </div>
+                  <div style={{ fontSize: 13, color: 'var(--text)', marginBottom: 10 }}>
+                    This node opens into a child graph. Layers on this node are hidden while it's a container — unlink to restore.
+                  </div>
+                  <div style={{ display: 'flex', gap: 8 }}>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        if (node.childGraphId) {
+                          useGraphStore.getState().setCurrentGraph(node.childGraphId);
+                        }
+                      }}
+                      style={{
+                        flex: 1,
+                        background: 'var(--accent)',
+                        color: '#fff',
+                        border: 'none',
+                        borderRadius: 6,
+                        padding: '8px',
+                        cursor: 'pointer',
+                        fontSize: 13,
+                        fontFamily: 'inherit',
+                      }}
+                    >
+                      Open child graph
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        if (!window.confirm('Unlink the child graph? It will become a top-level graph in Universe view.')) return;
+                        void useGraphStore.getState().unlinkChildGraph(node.id);
+                      }}
+                      style={{
+                        flex: 1,
+                        background: 'transparent',
+                        color: 'var(--text)',
+                        border: '1px solid var(--panel-border)',
+                        borderRadius: 6,
+                        padding: '8px',
+                        cursor: 'pointer',
+                        fontSize: 13,
+                        fontFamily: 'inherit',
+                      }}
+                    >
+                      Unlink
+                    </button>
+                  </div>
+                </div>
+              )}
+
+              {!node.childGraphId && (
+                <section style={{ display: "flex", flexDirection: "column", gap: 10 }}>
+                  <p style={{ fontSize: 12, color: "var(--text-muted)" }}>Layers</p>
+                  <div style={{ maxHeight: 400, overflowY: "auto", display: "flex", flexDirection: "column", gap: 10 }}>
+                    {node.layers.map((layer, index) => (
+                      <LayerCard
+                        key={`${node.id}-${layer.depth}-${index}`}
+                        nodeId={node.id}
+                        layer={layer}
+                        index={index}
+                        onPatch={(patch) => patchLayer(index, patch)}
+                      />
+                    ))}
+                  </div>
+                  <button
+                    onClick={() => {
+                      const existingDepths = node.layers.map((l) => l.depth);
+                      const newDepth = existingDepths.length === 0 ? 1 : Math.max(...existingDepths) + 1;
+                      const newLayer: Layer = {
+                        depth: newDepth,
+                        content: "",
+                        contentType: "text",
+                        createdAt: Timestamp.now(),
+                      };
+                      void updateNode(node.id, { layers: [...node.layers, newLayer] });
+                    }}
+                    style={{
+                      width: '100%',
+                      marginTop: 8,
+                      padding: '8px 12px',
+                      background: 'transparent',
+                      border: '1px dashed rgba(107, 138, 253, 0.5)',
+                      borderRadius: 6,
+                      color: '#6b8afd',
+                      fontSize: 12,
+                      cursor: 'pointer',
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      gap: 6,
+                    }}
+                  >
+                    + Add Layer
+                  </button>
+                </section>
+              )}
             </>
           )}
         </div>
