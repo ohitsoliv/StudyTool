@@ -35,6 +35,8 @@ interface GraphState {
   createEdge: (partial: Omit<EdgeDoc, 'id' | 'createdAt'>) => Promise<string | null>;
   updateEdge: (edgeId: string, patch: Partial<EdgeDoc>) => Promise<void>;
   deleteEdge: (edgeId: string) => Promise<void>;
+  createChildGraph: (sourceNodeId: string) => Promise<string | null>;
+  unlinkChildGraph: (sourceNodeId: string) => Promise<void>;
 }
 
 export const useGraphStore = create<GraphState>((set, get) => ({
@@ -120,7 +122,7 @@ export const useGraphStore = create<GraphState>((set, get) => ({
     await fsDeleteEdge(getUserId(), currentGraphId, edgeId);
   },
 
-  async createChildGraph(sourceNodeId) {
+  async createChildGraph(sourceNodeId: string) {
     const { currentGraphId, nodes } = get();
     if (!currentGraphId) return null;
     const sourceNode = nodes.find((n) => n.id === sourceNodeId);
@@ -148,7 +150,7 @@ export const useGraphStore = create<GraphState>((set, get) => ({
     return childGraphId;
   },
 
-  async unlinkChildGraph(sourceNodeId) {
+  async unlinkChildGraph(sourceNodeId: string) {
     const { currentGraphId, nodes } = get();
     if (!currentGraphId) return;
     const sourceNode = nodes.find((n) => n.id === sourceNodeId);
@@ -183,6 +185,4 @@ export function getSelectedEntity():
     if (node) return { kind: 'node', node };
   }
   return null;
-  createChildGraph: (sourceNodeId: string) => Promise<string | null>;
-  unlinkChildGraph: (sourceNodeId: string) => Promise<void>;
 }
