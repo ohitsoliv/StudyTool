@@ -2,7 +2,17 @@ import { create } from 'zustand';
 import type { Drill } from '../types/drill';
 import type { SessionConfig, SessionState } from '../types/session';
 import { DRILL_TO_LENS } from '../types/session';
-import { canClusterTitle, canDebuggerSystem, canMissingLink, canPathFinder, canScenarioBuilder, canSorter } from '../utils/drillEligibility';
+import {
+  canBridge,
+  canClusterTitle,
+  canDebuggerSystem,
+  canExample,
+  canMissingLink,
+  canPathFinder,
+  canScenarioBuilder,
+  canSorter,
+  canStubFill,
+} from '../utils/drillEligibility';
 import { pickRandomEligibleNode } from '../utils/cloze';
 import { useGraphStore } from './graphStore';
 import { useDrillStore } from './drillStore';
@@ -128,6 +138,9 @@ export const useSessionStore = create<SessionStore>((set, get) => ({
     if (canSorter(edges, opts, nodes).eligible) eligible.push('sorter');
     if (canScenarioBuilder(nodes, opts).eligible) eligible.push('scenario-builder');
     if (canDebuggerSystem(nodes, opts).eligible) eligible.push('debugger');
+    if (canBridge(nodes, opts).eligible) eligible.push('bridge');
+    if (canExample(nodes, opts).eligible) eligible.push('example');
+    if (canStubFill(nodes, opts).eligible) eligible.push('stub-fill');
 
     if (eligible.length === 0) return null;
 
@@ -209,6 +222,15 @@ export const useSessionStore = create<SessionStore>((set, get) => ({
         break;
       case 'debugger':
         started = drillStore.startDebugger(undefined, opts);
+        break;
+      case 'bridge':
+        started = drillStore.startBridge();
+        break;
+      case 'example':
+        started = drillStore.startExample();
+        break;
+      case 'stub-fill':
+        started = drillStore.startStubFill();
         break;
     }
 

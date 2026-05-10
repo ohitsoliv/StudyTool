@@ -1,6 +1,6 @@
 import type { EdgeType } from './graph';
 
-export type DrillKind = 'cloze' | 'path-finder' | 'missing-link' | 'cluster-title' | 'sorter' | 'scenario-builder' | 'debugger';
+export type DrillKind = 'cloze' | 'path-finder' | 'missing-link' | 'cluster-title' | 'sorter' | 'scenario-builder' | 'debugger' | 'bridge' | 'example' | 'stub-fill';
 
 export interface ClozeBlank {
   index: number;
@@ -73,7 +73,41 @@ export interface DebuggerDrill {
   input: string;
 }
 
-export type Drill = ClozeDrill | PathFinderDrill | MissingLinkDrill | ClusterTitleDrill | SorterDrill | ScenarioBuilderDrill | DebuggerDrill;
+export interface BridgeDrill {
+  kind: 'bridge';
+  aId: string | null;
+  bId: string | null;
+  chosenType: EdgeType | null;
+  label: string;
+  outcome?: 'created' | 'cancelled';
+}
+
+export interface ExampleDrill {
+  kind: 'example';
+  sourceNodeId: string;
+  userInput: string;
+  createdNodeId?: string;
+  outcome?: 'created' | 'cancelled';
+}
+
+export interface StubFillDrill {
+  kind: 'stub-fill';
+  nodeId: string;
+  userInput: string;
+  outcome?: 'filled' | 'cancelled';
+}
+
+export type Drill =
+  | ClozeDrill
+  | PathFinderDrill
+  | MissingLinkDrill
+  | ClusterTitleDrill
+  | SorterDrill
+  | ScenarioBuilderDrill
+  | DebuggerDrill
+  | BridgeDrill
+  | ExampleDrill
+  | StubFillDrill;
 
 export interface DrillResult {
   drill: Drill;

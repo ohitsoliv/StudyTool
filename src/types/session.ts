@@ -45,4 +45,7 @@ export const DRILL_TO_LENS: Record<Drill['kind'], SessionLens> = {
   'sorter': 'architect',
   'scenario-builder': 'practitioner',
   'debugger': 'practitioner',
+  'bridge': 'architect',
+  'example': 'practitioner',
+  'stub-fill': 'memorizer',
 };

@@ -22,10 +22,14 @@ import { CanvasContextMenu, type MenuItem } from './CanvasContextMenu';
 import { applyEdgeVisual } from '../../utils/edgeStyles';
 import PathFinderOverlay from './PathFinderOverlay';
 import MissingLinkOverlay from './MissingLinkOverlay';
+import BridgeOverlay from './BridgeOverlay';
 import ClusterTitleOverlay from './ClusterTitleOverlay';
 import SorterOverlay from './SorterOverlay';
 import {
   canCloze,
+  canBridge,
+  canExample,
+  canStubFill,
   canDebuggerNode,
   canDebuggerSystem,
   canPathFinder,
@@ -52,6 +56,7 @@ function GraphCanvasInner() {
   const selectNode = useGraphStore((s) => s.selectNode);
   const selectEdge = useGraphStore((s) => s.selectEdge);
   const clickPathStep = useDrillStore((s) => s.clickPathStep);
+  const pickBridgeNode = useDrillStore((s) => s.pickBridgeNode);
   const assignChild = useDrillStore((s) => s.assignChild);
   const addToPipeline = useDrillStore((s) => s.addToPipeline);
   const drillPhase = useDrillStore((s) => s.phase);
@@ -155,6 +160,7 @@ function GraphCanvasInner() {
 
   const onNodeDoubleClick = useCallback(
     (_e: React.MouseEvent, node: Node) => {
+      if (drillPhase === 'active') return;
       const sourceNode = useGraphStore
         .getState()
         .nodes.find((n) => n.id === node.id);
@@ -162,11 +168,15 @@ function GraphCanvasInner() {
         useGraphStore.getState().setCurrentGraph(sourceNode.childGraphId);
       }
     },
-    []
+    [drillPhase]
   );
 
   const onNodeClick = useCallback(
     (_e: React.MouseEvent, node: Node) => {
+      if (drillPhase === 'active' && currentDrill?.kind === 'bridge') {
+        pickBridgeNode(node.id);
+        return;
+      }
       if (drillPhase === 'active' && currentDrill?.kind === 'path-finder') {
         clickPathStep(node.id);
         return;
@@ -178,7 +188,7 @@ function GraphCanvasInner() {
       if (drillPhase === 'active') return;
       selectNode(node.id);
     },
-    [selectNode, clickPathStep, addToPipeline, drillPhase, currentDrill]
+    [selectNode, pickBridgeNode, clickPathStep, addToPipeline, drillPhase, currentDrill]
   );
 
   const onEdgeClick = useCallback(
@@ -262,6 +272,9 @@ function GraphCanvasInner() {
       const sorterEligibility = canSorter(menuEdges);
       const scenarioEligibility = canScenarioBuilder(menuNodes);
       const debuggerEligibility = canDebuggerSystem(menuNodes);
+      const bridgeEligibility = canBridge(menuNodes);
+      const exampleEligibility = canExample(menuNodes);
+      const stubFillEligibility = canStubFill(menuNodes);
 
       return [
         {
@@ -310,6 +323,24 @@ function GraphCanvasInner() {
               title: debuggerEligibility.reason,
               onClick: () => useDrillStore.getState().startDebugger(),
             },
+            {
+              label: 'Bridge',
+              disabled: !bridgeEligibility.eligible,
+              title: bridgeEligibility.reason,
+              onClick: () => useDrillStore.getState().startBridge(),
+            },
+            {
+              label: 'Example',
+              disabled: !exampleEligibility.eligible,
+              title: exampleEligibility.reason,
+              onClick: () => useDrillStore.getState().startExample(),
+            },
+            {
+              label: 'Stub-fill',
+              disabled: !stubFillEligibility.eligible,
+              title: stubFillEligibility.reason,
+              onClick: () => useDrillStore.getState().startStubFill(),
+            },
           ],
         },
         { separator: true },
@@ -348,6 +379,8 @@ function GraphCanvasInner() {
 
       const clozeEligibility = canCloze(node);
       const debuggerEligibility = canDebuggerNode(node);
+      const exampleEligibility = canExample(menuNodes, { poolNodeIds: new Set([node.id]) });
+      const stubFillEligibility = canStubFill(menuNodes, { poolNodeIds: new Set([node.id]) });
 
       return [
         {
@@ -366,11 +399,31 @@ function GraphCanvasInner() {
               onClick: () =>
                 useDrillStore.getState().startDebugger({ nodeId: node.id }),
             },
+            {
+              label: 'Example',
+              disabled: !exampleEligibility.eligible,
+              title: exampleEligibility.reason,
+              onClick: () =>
+                useDrillStore.getState().startExample({ sourceNodeId: node.id }),
+            },
+            {
+              label: 'Stub-fill',
+              disabled: !stubFillEligibility.eligible,
+              title: stubFillEligibility.reason,
+              onClick: () =>
+                useDrillStore.getState().startStubFill({ nodeId: node.id }),
+            },
           ],
           disabled:
-            !clozeEligibility.eligible && !debuggerEligibility.eligible,
+            !clozeEligibility.eligible &&
+            !debuggerEligibility.eligible &&
+            !exampleEligibility.eligible &&
+            !stubFillEligibility.eligible,
           title:
-            !clozeEligibility.eligible && !debuggerEligibility.eligible
+            !clozeEligibility.eligible &&
+            !debuggerEligibility.eligible &&
+            !exampleEligibility.eligible &&
+            !stubFillEligibility.eligible
               ? 'No eligible drills for this node'
               : undefined,
         },
@@ -528,6 +581,7 @@ function GraphCanvasInner() {
       </ReactFlow>
       <PathFinderOverlay />
       <MissingLinkOverlay />
+      <BridgeOverlay />
       <ClusterTitleOverlay />
       <SorterOverlay />
       {menu && (

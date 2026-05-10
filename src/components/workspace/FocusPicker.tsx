@@ -3,6 +3,9 @@ import { useGraphStore } from '../../store/graphStore';
 import { useDrillStore } from '../../store/drillStore';
 import { useSessionStore } from '../../store/sessionStore';
 import {
+  canBridge,
+  canExample,
+  canStubFill,
   canCloze,
   canDebuggerNode,
   canDebuggerSystem,
@@ -80,6 +83,9 @@ export default function FocusPicker() {
   const startSorter = useDrillStore((s) => s.startSorter);
   const startScenarioBuilder = useDrillStore((s) => s.startScenarioBuilder);
   const startDebugger = useDrillStore((s) => s.startDebugger);
+  const startBridge = useDrillStore((s) => s.startBridge);
+  const startExample = useDrillStore((s) => s.startExample);
+  const startStubFill = useDrillStore((s) => s.startStubFill);
   const openSessionModal = useSessionStore((s) => s.openModal);
 
   const memorizer: DrillEntry[] = [];
@@ -105,6 +111,12 @@ export default function FocusPicker() {
     eligibility: canPathFinder(nodes, edges),
     start: () => startPathFinder(),
   });
+  memorizer.push({
+    id: 'stub-fill',
+    label: 'Stub-fill',
+    eligibility: canStubFill(nodes),
+    start: () => startStubFill(),
+  });
 
   const architect: DrillEntry[] = [
     {
@@ -124,6 +136,12 @@ export default function FocusPicker() {
       label: 'Sorter',
       eligibility: canSorter(edges),
       start: () => startSorter(nodes, edges),
+    },
+    {
+      id: 'bridge',
+      label: 'Bridge',
+      eligibility: canBridge(nodes),
+      start: () => startBridge(),
     },
   ];
 
@@ -152,6 +170,12 @@ export default function FocusPicker() {
       start: () => startDebugger(),
     });
   }
+  practitioner.push({
+    id: 'example',
+    label: 'Example',
+    eligibility: canExample(nodes),
+    start: () => startExample(),
+  });
 
   return (
     <div

@@ -7,6 +7,8 @@ import { useViewStore } from '../../store/viewStore';
 import { useSessionStore } from '../../store/sessionStore';
 import FocusPicker from './FocusPicker';
 import SessionBanner from './SessionBanner';
+import ExampleDrill from './ExampleDrill';
+import StubFillDrill from './StubFillDrill';
 import type { NodeDoc } from '../../types/graph';
 
 const MIN_TEXT_LEN = 30;
@@ -356,6 +358,9 @@ export default function FocusWorkspace() {
       const n = nodes.find((x) => x.id === currentDrill.nodeId);
       return `${n?.title ?? 'Node'} (Debugger) — Layer ${currentDrill.layerDepth}`;
     }
+    if (currentDrill?.kind === 'bridge') return 'Bridge';
+    if (currentDrill?.kind === 'example') return 'Example';
+    if (currentDrill?.kind === 'stub-fill') return 'Stub-fill';
     if (activeCloze) return clozeNode?.title ?? 'Memorizer';
     if (gradedCloze)
       return nodes.find((n) => n.id === gradedCloze.drill.nodeId)?.title ?? 'Memorizer';
@@ -375,6 +380,10 @@ export default function FocusWorkspace() {
       <div style={bodyStyle}>
         {session && <SessionBanner />}
         {phase === 'idle' && !currentDrill && <FocusPicker />}
+        {(currentDrill?.kind === 'example' ||
+          (result?.drill.kind === 'example' && phase === 'graded')) && <ExampleDrill />}
+        {(currentDrill?.kind === 'stub-fill' ||
+          (result?.drill.kind === 'stub-fill' && phase === 'graded')) && <StubFillDrill />}
 
         {/* ============ ACTIVE: CLOZE ============ */}
         {activeCloze && (

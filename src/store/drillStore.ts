@@ -9,6 +9,9 @@ import type {
   SorterDrill,
   ScenarioBuilderDrill,
   DebuggerDrill,
+  BridgeDrill,
+  ExampleDrill,
+  StubFillDrill,
   DrillResult,
 } from '../types/drill';
 import type { EdgeDoc, EdgeType, NodeDoc } from '../types/graph';
@@ -76,6 +79,20 @@ interface DrillStoreState {
   setDebuggerInput: (text: string) => void;
   submitDebugger: () => void;
   giveUpDebugger: () => void;
+  startBridge: () => boolean;
+  pickBridgeNode: (nodeId: string) => void;
+  setBridgeType: (type: EdgeType) => void;
+  setBridgeLabel: (text: string) => void;
+  submitBridge: () => Promise<boolean>;
+  cancelBridge: () => void;
+  startExample: (opts?: { sourceNodeId?: string }) => boolean;
+  setExampleInput: (text: string) => void;
+  submitExample: () => Promise<boolean>;
+  cancelExample: () => void;
+  startStubFill: (opts?: { nodeId?: string }) => boolean;
+  setStubFillInput: (text: string) => void;
+  submitStubFill: () => Promise<boolean>;
+  cancelStubFill: () => void;
 }
 
 const MIN_TEXT_LEN = 30;
@@ -284,12 +301,275 @@ export const useDrillStore = create<DrillStoreState>((set, get) => ({
     set({ result, phase: 'graded' });
   },
 
+  startBridge: () => {
+    const graphState = useGraphStore.getState();
+    const nodes = graphState.nodes.filter((n) => !n.archived);
+    if (nodes.length < 2) return false;
+    useViewStore.getState().setViewMode('dual');
+    set({
+      currentDrill: {
+        kind: 'bridge',
+        aId: null,
+        bId: null,
+        chosenType: 'related',
+        label: '',
+      },
+      phase: 'active',
+      result: null,
+    });
+    return true;
+  },
+
+  pickBridgeNode: (nodeId: string) => {
+    const d = get().currentDrill;
+    if (!d || d.kind !== 'bridge') return;
+    if (d.aId === null) {
+      set({ currentDrill: { ...d, aId: nodeId } });
+      return;
+    }
+    if (d.bId === null && nodeId !== d.aId) {
+      set({ currentDrill: { ...d, bId: nodeId } });
+    }
+  },
+
+  setBridgeType: (type: EdgeType) => {
+    const d = get().currentDrill;
+    if (!d || d.kind !== 'bridge') return;
+    set({ currentDrill: { ...d, chosenType: type } });
+  },
+
+  setBridgeLabel: (text: string) => {
+    const d = get().currentDrill;
+    if (!d || d.kind !== 'bridge') return;
+    set({ currentDrill: { ...d, label: text } });
+  },
+
+  submitBridge: async () => {
+    const d = get().currentDrill;
+    if (!d || d.kind !== 'bridge') return false;
+    if (!d.aId || !d.bId || !d.chosenType) return false;
+    const trimmed = d.label.trim();
+    if (trimmed.length < 5) return false;
+
+    const graphStore = useGraphStore.getState();
+    await graphStore.createEdge({
+      source: d.aId,
+      target: d.bId,
+      type: d.chosenType,
+      label: trimmed,
+    });
+
+    await applyMasteryDelta([d.aId], 0.05);
+    await applyMasteryDelta([d.bId], 0.05);
+
+    const completedDrill: BridgeDrill = { ...d, label: trimmed, outcome: 'created' };
+    set({
+      currentDrill: completedDrill,
+      phase: 'graded',
+      result: { drill: completedDrill, score: 1, masteryDelta: 0.05 },
+    });
+    return true;
+  },
+
+  cancelBridge: () => {
+    get().dismiss();
+  },
+
+  startExample: (opts) => {
+    const graphState = useGraphStore.getState();
+    const nodes = graphState.nodes.filter((n) => !n.archived);
+    const hasL1Text = (n: NodeDoc) => {
+      const l1 = n.layers?.[0];
+      return (
+        l1 &&
+        l1.contentType === 'text' &&
+        typeof l1.content === 'string' &&
+        l1.content.trim().length > 0
+      );
+    };
+
+    let sourceNodeId: string | undefined;
+    if (opts?.sourceNodeId) {
+      const candidate = nodes.find((n) => n.id === opts.sourceNodeId);
+      if (candidate && hasL1Text(candidate)) sourceNodeId = candidate.id;
+    }
+    if (!sourceNodeId) {
+      const eligible = nodes.filter(hasL1Text);
+      if (eligible.length === 0) return false;
+      sourceNodeId = eligible[Math.floor(Math.random() * eligible.length)].id;
+    }
+
+    void markAccessed([sourceNodeId]);
+
+    set({
+      currentDrill: { kind: 'example', sourceNodeId, userInput: '' },
+      phase: 'active',
+      result: null,
+    });
+    return true;
+  },
+
+  setExampleInput: (text: string) => {
+    const d = get().currentDrill;
+    if (!d || d.kind !== 'example') return;
+    set({ currentDrill: { ...d, userInput: text } });
+  },
+
+  submitExample: async () => {
+    const d = get().currentDrill;
+    if (!d || d.kind !== 'example') return false;
+    const trimmed = d.userInput.trim();
+    if (trimmed.length < 10) return false;
+
+    const graphStore = useGraphStore.getState();
+    const source = graphStore.nodes.find((n) => n.id === d.sourceNodeId);
+    if (!source) return false;
+
+    const titleSeed = trimmed.slice(0, 30).trim();
+    const ellipsis = trimmed.length > 30 ? '…' : '';
+    const newTitle = `Example: ${titleSeed}${ellipsis}`;
+
+    const newId = await graphStore.createNode({
+      title: newTitle,
+      position: {
+        x: source.position.x + 260,
+        y: source.position.y + 60,
+      },
+      layers: [
+        {
+          depth: 1,
+          content: trimmed,
+          contentType: 'text',
+          createdAt: Timestamp.now(),
+        },
+      ],
+      tags: [],
+      mastery: { score: 0, lastReviewedAt: null, reviewCount: 0 },
+      archived: false,
+      clusterId: null,
+      accessCount: 0,
+      lastAccessedAt: null,
+    });
+    if (!newId) return false;
+
+    await graphStore.createEdge({
+      source: d.sourceNodeId,
+      target: newId,
+      type: 'related',
+    });
+
+    await applyMasteryDelta([d.sourceNodeId], 0.05);
+
+    const completedDrill: ExampleDrill = {
+      ...d,
+      userInput: trimmed,
+      createdNodeId: newId,
+      outcome: 'created',
+    };
+    set({
+      currentDrill: completedDrill,
+      phase: 'graded',
+      result: { drill: completedDrill, score: 1, masteryDelta: 0.05 },
+    });
+    return true;
+  },
+
+  cancelExample: () => {
+    get().dismiss();
+  },
+
+  startStubFill: (opts) => {
+    const graphState = useGraphStore.getState();
+    const nodes = graphState.nodes.filter((n) => !n.archived);
+    const isStub = (n: NodeDoc) => {
+      if (!n.layers || n.layers.length === 0) return true;
+      const l1 = n.layers[0];
+      if (!l1) return true;
+      if (typeof l1.content !== 'string') return true;
+      return l1.content.trim().length === 0;
+    };
+
+    let nodeId: string | undefined;
+    if (opts?.nodeId) {
+      const candidate = nodes.find((n) => n.id === opts.nodeId);
+      if (candidate && isStub(candidate)) nodeId = candidate.id;
+    }
+    if (!nodeId) {
+      const eligible = nodes.filter(isStub);
+      if (eligible.length === 0) return false;
+      nodeId = eligible[Math.floor(Math.random() * eligible.length)].id;
+    }
+
+    void markAccessed([nodeId]);
+
+    set({
+      currentDrill: { kind: 'stub-fill', nodeId, userInput: '' },
+      phase: 'active',
+      result: null,
+    });
+    return true;
+  },
+
+  setStubFillInput: (text: string) => {
+    const d = get().currentDrill;
+    if (!d || d.kind !== 'stub-fill') return;
+    set({ currentDrill: { ...d, userInput: text } });
+  },
+
+  submitStubFill: async () => {
+    const d = get().currentDrill;
+    if (!d || d.kind !== 'stub-fill') return false;
+    const trimmed = d.userInput.trim();
+    if (trimmed.length < 10) return false;
+
+    const graphStore = useGraphStore.getState();
+    const node = graphStore.nodes.find((n) => n.id === d.nodeId);
+    if (!node) return false;
+
+    let newLayers;
+    if (!node.layers || node.layers.length === 0) {
+      newLayers = [
+        {
+          depth: 1,
+          content: trimmed,
+          contentType: 'text' as const,
+          createdAt: Timestamp.now(),
+        },
+      ];
+    } else {
+      newLayers = [...node.layers];
+      newLayers[0] = { ...newLayers[0], content: trimmed };
+    }
+
+    await graphStore.updateNode(d.nodeId, { layers: newLayers });
+    await applyMasteryDelta([d.nodeId], 0.05);
+
+    const completedDrill: StubFillDrill = {
+      ...d,
+      userInput: trimmed,
+      outcome: 'filled',
+    };
+    set({
+      currentDrill: completedDrill,
+      phase: 'graded',
+      result: { drill: completedDrill, score: 1, masteryDelta: 0.05 },
+    });
+    return true;
+  },
+
+  cancelStubFill: () => {
+    get().dismiss();
+  },
+
   dismiss: () => {
     const drill = get().currentDrill;
     if (drill?.kind === 'sorter') {
       void restorePositions(drill.originalPositions);
     }
     if (drill?.kind === 'scenario-builder') {
+      useViewStore.getState().setViewMode('canvas');
+    }
+    if (drill?.kind === 'bridge') {
       useViewStore.getState().setViewMode('canvas');
     }
     if (drill?.kind === 'debugger') {

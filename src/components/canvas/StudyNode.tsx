@@ -71,6 +71,15 @@ function StudyNode({ data, selected, id }: NodeProps<StudyNodeType>) {
     drillBoxShadow = '0 0 0 4px rgba(107,138,253,0.25)';
   }
 
+  const isBridgeEndpoint =
+    phase === 'active' &&
+    currentDrill?.kind === 'bridge' &&
+    (id === currentDrill.aId || id === currentDrill.bId);
+  if (isBridgeEndpoint) {
+    drillOutline = '2px solid var(--accent)';
+    drillBoxShadow = '0 0 0 4px rgba(107,138,253,0.25)';
+  }
+
   // Cluster Title highlight
   const isClusterParent =
     currentDrill?.kind === 'cluster-title' &&

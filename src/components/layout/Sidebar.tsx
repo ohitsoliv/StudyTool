@@ -8,6 +8,7 @@ import { seedGraph, seedLinearAlgebra, seedLgbtqIdentityVocabulary, seedHousepla
 import { useViewStore } from "../../store/viewStore";
 import { useDrillStore } from '../../store/drillStore';
 import { useSessionStore } from '../../store/sessionStore';
+import { canBridge, canExample, canStubFill } from '../../utils/drillEligibility';
 import {
   listGraphs,
   createGraph,
@@ -28,6 +29,9 @@ export default function Sidebar(): JSX.Element {
   const [sorterUnavailable, setSorterUnavailable] = useState(false);
   const [scenarioBuilderUnavailable, setScenarioBuilderUnavailable] = useState(false);
   const [debuggerUnavailable, setDebuggerUnavailable] = useState(false);
+  const [bridgeUnavailable, setBridgeUnavailable] = useState<string | null>(null);
+  const [exampleUnavailable, setExampleUnavailable] = useState<string | null>(null);
+  const [stubFillUnavailable, setStubFillUnavailable] = useState<string | null>(null);
   const [creatingGraph, setCreatingGraph] = useState(false);
   const [newGraphName, setNewGraphName] = useState('');
 
@@ -66,6 +70,24 @@ export default function Sidebar(): JSX.Element {
     const t = setTimeout(() => setDebuggerUnavailable(false), 3000);
     return () => clearTimeout(t);
   }, [debuggerUnavailable]);
+
+  useEffect(() => {
+    if (!bridgeUnavailable) return;
+    const t = setTimeout(() => setBridgeUnavailable(null), 3000);
+    return () => clearTimeout(t);
+  }, [bridgeUnavailable]);
+
+  useEffect(() => {
+    if (!exampleUnavailable) return;
+    const t = setTimeout(() => setExampleUnavailable(null), 3000);
+    return () => clearTimeout(t);
+  }, [exampleUnavailable]);
+
+  useEffect(() => {
+    if (!stubFillUnavailable) return;
+    const t = setTimeout(() => setStubFillUnavailable(null), 3000);
+    return () => clearTimeout(t);
+  }, [stubFillUnavailable]);
 
   const fetchGraphs = async (): Promise<void> => {
     const result = await listGraphs(getUserId());
@@ -518,6 +540,105 @@ export default function Sidebar(): JSX.Element {
             {debuggerUnavailable && (
               <div style={{ fontSize: 12, color: 'var(--text-muted)', marginTop: 6 }}>
                 No layers with a broken version.
+              </div>
+            )}
+
+            <button
+              type="button"
+              onClick={() => {
+                const { nodes: ns } = useGraphStore.getState();
+                const e = canBridge(ns);
+                if (!e.eligible) {
+                  setBridgeUnavailable(e.reason ?? 'Not available');
+                  return;
+                }
+                useDrillStore.getState().startBridge();
+              }}
+              style={{
+                width: '100%',
+                background: 'var(--accent)',
+                color: '#fff',
+                border: 'none',
+                borderRadius: 6,
+                padding: '8px',
+                cursor: 'pointer',
+                fontSize: 14,
+                fontWeight: 500,
+                fontFamily: 'inherit',
+                marginTop: 6,
+              }}
+            >
+              Bridge
+            </button>
+            {bridgeUnavailable && (
+              <div style={{ fontSize: 12, color: 'var(--text-muted)', marginTop: 6 }}>
+                {bridgeUnavailable}
+              </div>
+            )}
+
+            <button
+              type="button"
+              onClick={() => {
+                const { nodes: ns } = useGraphStore.getState();
+                const e = canExample(ns);
+                if (!e.eligible) {
+                  setExampleUnavailable(e.reason ?? 'Not available');
+                  return;
+                }
+                useDrillStore.getState().startExample();
+              }}
+              style={{
+                width: '100%',
+                background: 'var(--accent)',
+                color: '#fff',
+                border: 'none',
+                borderRadius: 6,
+                padding: '8px',
+                cursor: 'pointer',
+                fontSize: 14,
+                fontWeight: 500,
+                fontFamily: 'inherit',
+                marginTop: 6,
+              }}
+            >
+              Example
+            </button>
+            {exampleUnavailable && (
+              <div style={{ fontSize: 12, color: 'var(--text-muted)', marginTop: 6 }}>
+                {exampleUnavailable}
+              </div>
+            )}
+
+            <button
+              type="button"
+              onClick={() => {
+                const { nodes: ns } = useGraphStore.getState();
+                const e = canStubFill(ns);
+                if (!e.eligible) {
+                  setStubFillUnavailable(e.reason ?? 'Not available');
+                  return;
+                }
+                useDrillStore.getState().startStubFill();
+              }}
+              style={{
+                width: '100%',
+                background: 'var(--accent)',
+                color: '#fff',
+                border: 'none',
+                borderRadius: 6,
+                padding: '8px',
+                cursor: 'pointer',
+                fontSize: 14,
+                fontWeight: 500,
+                fontFamily: 'inherit',
+                marginTop: 6,
+              }}
+            >
+              Stub-fill
+            </button>
+            {stubFillUnavailable && (
+              <div style={{ fontSize: 12, color: 'var(--text-muted)', marginTop: 6 }}>
+                {stubFillUnavailable}
               </div>
             )}
           </div>

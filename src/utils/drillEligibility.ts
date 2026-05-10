@@ -152,3 +152,58 @@ export function canDebuggerSystem(nodes: NodeDoc[], opts?: EligibilityOptions): 
     ? { eligible: true }
     : { eligible: false, reason: 'No layers have a broken version yet' };
 }
+
+export function canBridge(
+  nodes: NodeDoc[],
+  opts?: EligibilityOptions
+): Eligibility {
+  const pool = filterNodesByPool(nodes, opts).filter((n) => !n.archived);
+  if (pool.length < 2) {
+    return { eligible: false, reason: 'Needs ≥ 2 nodes.' };
+  }
+  return { eligible: true };
+}
+
+export function canExample(
+  nodes: NodeDoc[],
+  opts?: EligibilityOptions
+): Eligibility {
+  const pool = filterNodesByPool(nodes, opts).filter((n) => !n.archived);
+  const hasContent = pool.some((n) => {
+    const l1 = n.layers?.[0];
+    return (
+      l1 &&
+      l1.contentType === 'text' &&
+      typeof l1.content === 'string' &&
+      l1.content.trim().length > 0
+    );
+  });
+  if (!hasContent) {
+    return {
+      eligible: false,
+      reason: 'Needs at least one node with Layer 1 text content.',
+    };
+  }
+  return { eligible: true };
+}
+
+export function canStubFill(
+  nodes: NodeDoc[],
+  opts?: EligibilityOptions
+): Eligibility {
+  const pool = filterNodesByPool(nodes, opts).filter((n) => !n.archived);
+  const hasStub = pool.some((n) => {
+    if (!n.layers || n.layers.length === 0) return true;
+    const l1 = n.layers[0];
+    if (!l1) return true;
+    if (typeof l1.content !== 'string') return true;
+    return l1.content.trim().length === 0;
+  });
+  if (!hasStub) {
+    return {
+      eligible: false,
+      reason: 'No empty nodes — every node already has Layer 1 content.',
+    };
+  }
+  return { eligible: true };
+}
